@@ -1,5 +1,9 @@
 // components/DashboardSidebar.jsx
 import React, { useState } from "react";
+import DashBoardPage from "./DashBoardPage.jsx";
+import EditProfile from "./EditProfile.jsx";
+import EditBankDetail from "./Editbankdetail.jsx";
+import ImageUpload from "./Imageuploader.jsx";
 
 const DASHBOARD_ITEMS = [
   {
@@ -53,8 +57,10 @@ const DASHBOARD_ITEMS = [
   },
 ];
 
+// "children" yahan right side ka content hoga (jaise DashBoardPage)
 export default function DashboardSidebar({ open, onClose }) {
   const [openParent, setOpenParent] = useState(null); // which main item is expanded
+  const [activePage, setActivePage] = useState("dashboard"); // which right-side page is visible
 
   if (!open) return null;
 
@@ -62,26 +68,30 @@ export default function DashboardSidebar({ open, onClose }) {
     if (hasChildren) {
       setOpenParent((prev) => (prev === label ? null : label));
     } else {
-      // later you can handle direct navigation here
       console.log("Clicked:", label);
     }
   };
 
   const handleChildClick = (parentLabel, childLabel) => {
-    // here you can do routing / open modals etc.
     console.log(`Clicked: ${parentLabel} → ${childLabel}`);
+
+    // Map specific child clicks to right-side pages
+    if (parentLabel === "Profile") {
+      if (childLabel === "Edit Profile") {
+        setActivePage("edit-profile");
+      } else if (childLabel === "KYC Upload") {
+        setActivePage("kyc-upload");
+      } else if (childLabel === "Edit Bank Details") {
+        setActivePage("edit-bank");
+      }
+    }
   };
 
   return (
-    <>
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
+    // Full-screen overlay: LEFT = menu, RIGHT = children content
+    <div className="fixed inset-0 z-50 flex bg-slate-900/40 backdrop-blur-sm">
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-50 shadow-2xl flex flex-col">
+      <aside className="w-72 bg-slate-900 text-slate-50 shadow-2xl flex flex-col">
         {/* Top */}
         <div className="flex items-center justify-between px-4 h-16 border-b border-slate-800">
           <span className="text-sm font-semibold tracking-wide uppercase">
@@ -148,6 +158,14 @@ export default function DashboardSidebar({ open, onClose }) {
           </button>
         </div>
       </aside>
-    </>
+
+      {/* RIGHT: dashboard content switched by sidebar "router" */}
+      <main className="flex-1 bg-slate-950/90 overflow-y-auto">
+        {activePage === "dashboard" && <DashBoardPage />}
+        {activePage === "edit-profile" && <EditProfile />}
+        {activePage === "kyc-upload" && <ImageUpload />}
+        {activePage === "edit-bank" && <EditBankDetail />}
+      </main>
+    </div>
   );
 }

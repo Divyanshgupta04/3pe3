@@ -1,6 +1,6 @@
-// src/components/MemberDashboard.jsx
 import React, { useState } from "react";
 
+// =================== LEFT MENU ITEMS ===================
 const SIDE_MENU = [
   { id: "dashboard", label: "Dashboard" },
   { id: "activeId", label: "Active ID" },
@@ -12,98 +12,30 @@ const SIDE_MENU = [
   { id: "settings", label: "Settings" },
 ];
 
-const MemberDashboard = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
+// =================== DASHBOARD CARDS DATA ===================
+const statsTop = [
+  { label: "Total Income", value: "0 INR", color: "bg-blue-500" },
+  { label: "Withdrawal", value: "0 INR", color: "bg-amber-400" },
+  { label: "Balance", value: "0 INR", color: "bg-red-500" },
+  { label: "Freadom(Pool) Income", value: "0 INR", color: "bg-emerald-500" },
+  { label: "Daily Bonus Income", value: "0 INR", color: "bg-emerald-500" },
+  { label: "Rank Reward Income", value: "0 INR", color: "bg-emerald-500" },
+];
 
-  return (
-    <section
-      id="member-panel"
-      className="py-10 md:py-14 bg-slate-100 border-t border-slate-200"
-    >
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="mb-6">
-          <p className="text-xs font-semibold tracking-[0.18em] text-emerald-500 uppercase">
-            Member Dashboard
-          </p>
-          <h2 className="text-xl md:text-2xl font-semibold text-slate-900 mt-1">
-            Life Spark Associates Panel
-          </h2>
-          <p className="text-xs md:text-sm text-slate-500 mt-1">
-            Manage your IDs, E-Pins, team network, income reports and support
-            from one place.
-          </p>
-        </div>
+const statsBottom = [
+  { label: "Repurchase Income", value: "0 INR" },
+  { label: "Today Active", value: "0" },
+  { label: "Today InActive", value: "0" },
+  { label: "Today Total Id", value: "0" },
+  { label: "Total User", value: "0" },
+  { label: "Total Active User", value: "0" },
+  { label: "Total InActive User", value: "0" },
+  { label: "Total Direct", value: "0" },
+  { label: "Total Direct Active", value: "0" },
+  { label: "Total Direct InActive", value: "0" },
+];
 
-        <div className="flex flex-col md:flex-row gap-5 md:gap-6">
-          {/* Sidebar */}
-          <aside className="md:w-64 shrink-0 rounded-2xl bg-white/90 border border-slate-200 shadow-sm shadow-slate-200/80 backdrop-blur-xl p-4 flex flex-col">
-            <div className="mb-3">
-              <p className="text-[11px] font-semibold tracking-[0.18em] text-emerald-500 uppercase">
-                Member Panel
-              </p>
-              <p className="text-sm font-semibold text-slate-900 mt-1">
-                Welcome, Associate
-              </p>
-              <p className="text-[11px] text-slate-500">
-                ID: <span className="font-medium text-slate-800">LSA12345</span>
-              </p>
-            </div>
-
-            <div className="space-y-1 flex-1 overflow-y-auto">
-              {SIDE_MENU.map((item) => {
-                const isActive = activeTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs md:text-sm text-left transition
-                      ${
-                        isActive
-                          ? "bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 text-white shadow-sm shadow-emerald-300/50"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                      }`}
-                  >
-                    <span>{item.label}</span>
-                    {isActive && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-white/90" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="pt-3 mt-3 border-t border-slate-200 text-[11px] text-slate-500">
-              <p>
-                Wallet:{" "}
-                <span className="font-semibold text-slate-900">₹ 8,540</span>
-              </p>
-              <button className="mt-2 text-red-500 hover:text-red-400">
-                Logout
-              </button>
-            </div>
-          </aside>
-
-          {/* Main content */}
-          <main className="flex-1 min-h-[260px]">
-            {activeTab === "dashboard" && <MP_Dashboard />}
-            {activeTab === "activeId" && <MP_ActiveId />}
-            {activeTab === "epin" && <MP_Epin />}
-            {activeTab === "teamNetwork" && <MP_TeamNetwork />}
-            {activeTab === "incomeReport" && <MP_IncomeReport />}
-            {activeTab === "support" && <MP_Support />}
-            {activeTab === "profile" && <MP_Profile />}
-            {activeTab === "settings" && <MP_Settings />}
-          </main>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-export default MemberDashboard;
-
-/* ========== Reusable Card ========== */
-
+// =================== REUSABLE CARD FOR TABS ===================
 const MPCard = ({ title, children }) => (
   <div className="rounded-2xl bg-white border border-slate-200 shadow-sm shadow-slate-200/70 p-4 md:p-5 mb-4">
     <h3 className="text-sm md:text-base font-semibold text-slate-900 mb-2">
@@ -113,7 +45,7 @@ const MPCard = ({ title, children }) => (
   </div>
 );
 
-/* ========== Tab Contents ========== */
+// =================== RIGHT-SIDE TABS (BLUR AREA CONTENT) ===================
 
 const MP_Dashboard = () => (
   <div>
@@ -140,9 +72,7 @@ const MP_ActiveId = () => (
       Active ID
     </h2>
     <MPCard title="Your Active IDs">
-      <p>
-        Show a table here with columns like: ID, Package, DOJ, Expiry, Status.
-      </p>
+      <p>Yahan table aayega: ID, Package, DOJ, Expiry, Status.</p>
     </MPCard>
   </div>
 );
@@ -153,15 +83,10 @@ const MP_Epin = () => (
       E-Pin Management
     </h2>
     <MPCard title="Available E-Pins">
-      <p>
-        List of E-Pins with value, used/unused status, generated date and
-        transfer options.
-      </p>
+      <p>List of E-Pins with value, used/unused, generated date, transfer etc.</p>
     </MPCard>
     <MPCard title="Generate / Transfer">
-      <p>
-        Add a form to generate new pins or transfer them to team members.
-      </p>
+      <p>Form for new pins / transfer to team members.</p>
     </MPCard>
   </div>
 );
@@ -172,10 +97,7 @@ const MP_TeamNetwork = () => (
       Team Network
     </h2>
     <MPCard title="Downline Overview">
-      <p>
-        Show left / right team count, level-wise members, active vs inactive and
-        total business volume.
-      </p>
+      <p>Left / right team, level-wise members, active vs inactive, BV etc.</p>
     </MPCard>
   </div>
 );
@@ -186,10 +108,7 @@ const MP_IncomeReport = () => (
       Income Report
     </h2>
     <MPCard title="Payout Summary">
-      <p>
-        Direct income, level income, ROI income, rewards and withdrawal history
-        can be displayed here.
-      </p>
+      <p>Direct income, level income, ROI, rewards, withdrawals, sab yahan.</p>
     </MPCard>
   </div>
 );
@@ -200,10 +119,7 @@ const MP_Support = () => (
       Support
     </h2>
     <MPCard title="Raise a Ticket">
-      <p>
-        Add a form with Subject, Category, Description and Attachment fields.
-        Also show ticket history &amp; status.
-      </p>
+      <p>Subject, Category, Description, Attachment ke saath ticket form.</p>
     </MPCard>
   </div>
 );
@@ -214,10 +130,7 @@ const MP_Profile = () => (
       My Profile
     </h2>
     <MPCard title="Personal Details">
-      <p>
-        Name, mobile, email, address, nominee details, bank / UPI details and
-        KYC status.
-      </p>
+      <p>Name, mobile, email, address, bank/UPI, KYC status etc.</p>
     </MPCard>
   </div>
 );
@@ -227,11 +140,137 @@ const MP_Settings = () => (
     <h2 className="text-lg md:text-xl font-semibold text-slate-900 mb-4">
       Settings
     </h2>
-    <MPCard title="Security &amp; Preferences">
-      <p>
-        Password change, 2FA, login alerts and other notification preferences
-        can come here.
-      </p>
+    <MPCard title="Security & Preferences">
+      <p>Password change, 2FA, login alerts, notifications settings.</p>
     </MPCard>
   </div>
 );
+
+// =================== CENTER DASHBOARD (COLOURED CARDS PART) ===================
+const DashBoardPage = () => (
+  <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+    {/* Top blue bar */}
+    <div className="bg-sky-600 text-center text-white text-xs md:text-sm py-2">
+      सपनों की दुनिया को वास्तविकता में बदलने जा रहा।
+    </div>
+
+    {/* Activation text */}
+    <div className="text-center text-red-600 text-xs md:text-sm mt-2">
+      Click here to activate your account!
+    </div>
+
+    <div className="px-4 pb-6 pt-4 md:px-6 md:pb-8">
+      {/* Congratulation card */}
+      <div className="bg-white rounded shadow border border-gray-200 overflow-hidden">
+        <div className="bg-red-500 text-white font-semibold text-center py-2 text-sm">
+          Congratulation!
+        </div>
+        <div className="bg-sky-500 text-white text-center py-6">
+          <div className="text-lg md:text-xl font-semibold">Karan Yadav</div>
+          <div className="mt-1 text-xs md:text-sm">WSE414890</div>
+          <div className="mt-1 text-xs md:text-sm">Post</div>
+          <div className="mt-4 text-[10px] md:text-xs">
+            Joining Date: 30/11/2025
+          </div>
+          <div className="text-[10px] md:text-xs">Sponsor ID : WSE597116</div>
+        </div>
+      </div>
+
+      {/* Top stats grid */}
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {statsTop.map((item) => (
+          <div
+            key={item.label}
+            className={`${item.color} text-white rounded shadow p-4 flex flex-col justify-center`}
+          >
+            <div className="text-xs opacity-90">{item.label}</div>
+            <div className="mt-2 text-lg font-semibold">{item.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom stats grid */}
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {statsBottom.map((item) => (
+          <div
+            key={item.label}
+            className="bg-sky-500 text-white rounded shadow p-4 flex flex-col justify-center"
+          >
+            <div className="text-xs opacity-90">{item.label}</div>
+            <div className="mt-2 text-lg font-semibold">{item.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+// =================== MAIN LAYOUT (MENU LEFT + DASHBOARD CENTER + BLUR RIGHT) ===================
+
+const MemberLayout = () => {
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  return (
+    <div className="min-h-screen bg-slate-100 flex items-stretch">
+      {/* LEFT SIDE MENU (image jaisa dark panel) */}
+      <aside className="w-72 bg-slate-900 text-white flex flex-col">
+        <div className="px-4 py-4 text-lg font-semibold border-b border-slate-700">
+          MEMBER MENU
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-3 space-y-1 text-sm">
+          <p className="text-xs text-slate-400 mb-2">Profile</p>
+          {SIDE_MENU.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full text-left px-3 py-2 rounded-md transition ${
+                  isActive
+                    ? "bg-slate-700 text-white"
+                    : "text-slate-200 hover:bg-slate-800"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <button className="m-3 mt-0 mb-4 rounded-md bg-rose-600 hover:bg-rose-500 text-sm font-semibold py-2">
+          Logout
+        </button>
+      </aside>
+
+      {/* CENTER + RIGHT (background blur jaisa) */}
+      <main className="flex-1 relative overflow-hidden">
+        {/* blur background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-sky-100 via-white to-emerald-50" />
+        <div className="absolute inset-0 backdrop-blur-sm opacity-70" />
+
+        {/* foreground content */}
+        <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-6">
+          {/* Center: coloured dashboard (DashBoardPage) */}
+          <div className="flex-1">
+            <DashBoardPage />
+          </div>
+
+          {/* Right: active section content change on menu click */}
+          <div className="w-full lg:w-[40%]">
+            {activeTab === "dashboard" && <MP_Dashboard />}
+            {activeTab === "activeId" && <MP_ActiveId />}
+            {activeTab === "epin" && <MP_Epin />}
+            {activeTab === "teamNetwork" && <MP_TeamNetwork />}
+            {activeTab === "incomeReport" && <MP_IncomeReport />}
+            {activeTab === "support" && <MP_Support />}
+            {activeTab === "profile" && <MP_Profile />}
+            {activeTab === "settings" && <MP_Settings />}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default MemberLayout;

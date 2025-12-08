@@ -14,6 +14,7 @@ import TeamSection from "./components/TeamSection";
 import TestimonialsSection from "./components/TestimonialsSection";
 import FAQSection from "./components/FAQSection";
 import FooterSection from "./components/FooterSection";
+import MemberLayout from "./components/dashboard/MemberDashboard";
 
 const NAV_ITEMS = [
   { label: "Home", id: "home" } ,
@@ -107,6 +108,7 @@ export default function App() {
       <TestimonialsSection />
       <FAQSection />
       <FooterSection />
+      <MemberLayout />
     </div>
   );
 }

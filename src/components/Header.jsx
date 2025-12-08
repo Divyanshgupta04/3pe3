@@ -1,6 +1,7 @@
 // components/Header.jsx
 import React, { useState } from "react";
 import DashboardSidebar from "./dashboard/DashboardSidebar.jsx";
+import DashBoardPage from "./dashboard/DashBoardPage.jsx";
 // import DashboardSidebar from "./DashboardSidebar";
 
 export default function Header({
@@ -18,7 +19,10 @@ export default function Header({
       <DashboardSidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-      />
+      >
+        {/* Right side content: Dashboard page */}
+        <DashBoardPage />
+      </DashboardSidebar>
 
       <header className="fixed inset-x-0 top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:h-20">
