@@ -1,7 +1,7 @@
 // src/components/FooterSection.jsx
 import React from "react";
 
-const FooterSection = () => {
+const FooterSection = ({ onLoginClick, onRegisterClick }) => {
   return (
     <footer
       id="footer"
@@ -90,6 +90,23 @@ const FooterSection = () => {
             © {new Date().getFullYear()} World Shopee Enterprises. All rights
             reserved.
           </p>
+
+          {/* Bottom menu buttons */}
+          <div className="flex items-center gap-3 mt-2 md:mt-0">
+            <button
+              className="px-4 py-1.5 rounded-full border border-emerald-400 text-emerald-600 text-[11px] font-semibold hover:bg-emerald-50 transition"
+              onClick={onRegisterClick}
+            >
+              Register
+            </button>
+            <button
+              className="px-4 py-1.5 rounded-full bg-emerald-400 text-slate-950 text-[11px] font-semibold hover:bg-emerald-300 transition"
+              onClick={onLoginClick}
+            >
+              Login
+            </button>
+          </div>
+
           <p>Design inspired by the original WSE website layout.</p>
         </div>
       </div>

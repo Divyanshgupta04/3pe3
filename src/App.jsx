@@ -15,6 +15,9 @@ import TestimonialsSection from "./components/TestimonialsSection";
 import FAQSection from "./components/FAQSection";
 import FooterSection from "./components/FooterSection";
 import MemberLayout from "./components/dashboard/MemberDashboard";
+import OfficialLoginPage from "./components/dashboard/Login";
+import OfficialRegisterPage from "./components/dashboard/Register";
+import WelcomePage from "./components/dashboard/WelcomePage";
 
 const NAV_ITEMS = [
   { label: "Home", id: "home" } ,
@@ -30,6 +33,52 @@ const NAV_ITEMS = [
 export default function App() {
   const [activeSection, setActiveSection] = useState("home");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [authView, setAuthView] = useState(null); // "login" | "register" | "welcome"
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem("token")
+  );
+  const [welcomeData, setWelcomeData] = useState(null);
+
+  async function handleRegisterSubmit(payload) {
+    const res = await fetch("http://localhost:5000/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || "Registration failed");
+    }
+
+    // Save member token
+    localStorage.setItem("token", data.token);
+    setIsAuthenticated(true);
+
+    // After register, go to WelcomePage with real invite code from backend
+    setWelcomeData({
+      name: data.user?.name || payload.name,
+      email: data.user?.email || payload.email,
+      // we only know plain password from payload, not from backend
+      password: payload.password,
+      inviteCode: data.user?.inviteCode,
+    });
+    setAuthView("welcome");
+  }
+
+  async function handleLoginSubmit(payload) {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: payload.email, password: payload.password }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || "Login failed");
+    }
+    localStorage.setItem("token", data.token);
+    setIsAuthenticated(true);
+    setAuthView(null);
+  }
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -88,6 +137,41 @@ export default function App() {
     setMobileOpen(false);
   };
 
+  // When authView is set, show the corresponding page full-screen
+  if (authView === "login") {
+    return (
+      <OfficialLoginPage
+        onSubmit={handleLoginSubmit}
+        onGoToRegister={() => setAuthView("register")}
+        onGoHome={() => setAuthView(null)}
+      />
+    );
+  }
+
+  if (authView === "register") {
+    return (
+      <OfficialRegisterPage
+        onSubmit={handleRegisterSubmit}
+        onGoToLogin={() => setAuthView("login")}
+        onGoHome={() => setAuthView(null)}
+      />
+    );
+  }
+
+  if (authView === "welcome" && welcomeData) {
+    return (
+      <WelcomePage
+        userName={welcomeData.name}
+        email={welcomeData.email}
+        password={welcomeData.password}
+        inviteCode={welcomeData.inviteCode}
+        onContinue={() => {
+          setAuthView(null);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
       <Header
@@ -96,6 +180,8 @@ export default function App() {
         setMobileOpen={setMobileOpen}
         scrollToId={scrollToId}
         NAV_ITEMS={NAV_ITEMS}
+        onLoginClick={() => setAuthView("login")}
+        onRegisterClick={() => setAuthView("register")}
       />
 
       <HeroSection scrollToId={scrollToId} />
@@ -107,8 +193,12 @@ export default function App() {
       <TeamSection />
       <TestimonialsSection />
       <FAQSection />
-      <FooterSection />
-      <MemberLayout />
+      <FooterSection
+        onLoginClick={() => setAuthView("login")}
+        onRegisterClick={() => setAuthView("register")}
+      />
+      {isAuthenticated && <MemberLayout />}
     </div>
   );
 }
+

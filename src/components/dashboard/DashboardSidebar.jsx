@@ -1,9 +1,12 @@
-// components/DashboardSidebar.jsx
-import React, { useState } from "react";
-import DashBoardPage from "./DashBoardPage.jsx";
-import EditProfile from "./EditProfile.jsx";
-import EditBankDetail from "./Editbankdetail.jsx";
-import ImageUpload from "./Imageuploader.jsx";
+import React, { useState, useEffect } from "react";
+
+import ActivateID from "./ActivateID";
+import TeamBusiness from "./MyTeamBusiness/TeamBusiness";
+import RankRewardBusiness from "./MyTeamBusiness/RankRewardBusiness";
+import FreedomBusiness from "./MyTeamBusiness/FreedomBusiness";
+import EditProfile from "./EditProfile";
+import EditBankDetail from "./Editbankdetail";
+import ImageUpload from "./Imageuploader";
 
 const DASHBOARD_ITEMS = [
   {
@@ -25,13 +28,7 @@ const DASHBOARD_ITEMS = [
       { label: "ePin Report" },
     ],
   },
-  {
-    label: "Active ID",
-    children: [
-      { label: "Activate ID" },
-      { label: "Active ID Report" },
-    ],
-  },
+  { label: "Active ID" },
   {
     label: "My Team Network",
     children: [
@@ -43,8 +40,9 @@ const DASHBOARD_ITEMS = [
   {
     label: "My Team Business Support",
     children: [
-      { label: "Business Summary" },
-      { label: "Payout Details" },
+      { label: "Team Business" },
+      { label: "Rank Reward Business" },
+      { label: "Freedom Business" },
     ],
   },
   {
@@ -57,41 +55,146 @@ const DASHBOARD_ITEMS = [
   },
 ];
 
-// "children" yahan right side ka content hoga (jaise DashBoardPage)
-export default function DashboardSidebar({ open, onClose }) {
-  const [openParent, setOpenParent] = useState(null); // which main item is expanded
-  const [activePage, setActivePage] = useState("dashboard"); // which right-side page is visible
+export default function DashboardSidebar({
+  open = true,
+  onClose,
+  children,
+  onLoginClick,
+  onRegisterClick,
+}) {
+  const [openParent, setOpenParent] = useState(null);
+  const [activePanel, setActivePanel] = useState(null); // e.g., 'activate-id', 'team-business', etc.
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    typeof window !== "undefined" ? !!localStorage.getItem("token") : false
+  );
+
+  // Prevent background scrolling when the sidebar is open.
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow || "";
+
+    // Check auth status whenever sidebar is opened/closed
+    if (typeof window !== "undefined") {
+      setIsLoggedIn(!!localStorage.getItem("token"));
+    }
+
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = previousOverflow;
+      setActivePanel(null);
+      setOpenParent(null);
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
 
   if (!open) return null;
+
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+    }
+    setIsLoggedIn(false);
+    // Close sidebar and refresh UI state
+    if (onClose) onClose();
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
+  };
 
   const handleParentClick = (label, hasChildren) => {
     if (hasChildren) {
       setOpenParent((prev) => (prev === label ? null : label));
     } else {
-      console.log("Clicked:", label);
-    }
-  };
-
-  const handleChildClick = (parentLabel, childLabel) => {
-    console.log(`Clicked: ${parentLabel} → ${childLabel}`);
-
-    // Map specific child clicks to right-side pages
-    if (parentLabel === "Profile") {
-      if (childLabel === "Edit Profile") {
-        setActivePage("edit-profile");
-      } else if (childLabel === "KYC Upload") {
-        setActivePage("kyc-upload");
-      } else if (childLabel === "Edit Bank Details") {
-        setActivePage("edit-bank");
+      if (label === "Active ID") {
+        setActivePanel("activate-id");
+      } else {
+        console.log("Clicked parent:", label);
       }
     }
   };
 
+  const handleChildClick = (parentLabel, childLabel) => {
+    // Profile -> different forms / KYC screens
+    if (parentLabel === "Profile") {
+      if (childLabel === "Edit Profile") {
+        setActivePanel("edit-profile");
+        return;
+      }
+      if (childLabel === "KYC Upload") {
+        setActivePanel("kyc-upload");
+        return;
+      }
+      if (childLabel === "Edit Bank Details") {
+        setActivePanel("edit-bank-details");
+        return;
+      }
+      // For now we keep Edit Password / Welcome Letter / Create ID Card as simple logs
+    }
+
+    // My Team Business Support -> business related panels
+    if (parentLabel === "My Team Business Support") {
+      if (childLabel === "Team Business") {
+        setActivePanel("team-business");
+        return;
+      }
+      if (childLabel === "Rank Reward Business") {
+        setActivePanel("rank-reward-business");
+        return;
+      }
+      if (childLabel === "Freedom Business") {
+        setActivePanel("freedom-business");
+        return;
+      }
+    }
+    console.log(`Clicked: ${parentLabel} → ${childLabel}`);
+    setActivePanel(null);
+  };
+
+  const renderRightPanelContent = () => {
+    // Parent: Active ID
+    if (activePanel === "activate-id") {
+      return <ActivateID compact />;
+    }
+
+    // Parent: Profile
+    if (activePanel === "edit-profile") {
+      return <EditProfile />;
+    }
+    if (activePanel === "kyc-upload") {
+      return <ImageUpload />;
+    }
+    if (activePanel === "edit-bank-details") {
+      return <EditBankDetail />;
+    }
+
+    // Parent: My Team Business Support
+    if (activePanel === "team-business") {
+      return <TeamBusiness />;
+    }
+    if (activePanel === "rank-reward-business") {
+      return <RankRewardBusiness />;
+    }
+    if (activePanel === "freedom-business") {
+      return <FreedomBusiness />;
+    }
+
+    // Default content when nothing specific is selected
+    return children || null;
+  };
+
   return (
-    // Full-screen overlay: LEFT = menu, RIGHT = children content
-    <div className="fixed inset-0 z-50 flex bg-slate-900/40 backdrop-blur-sm">
+    <>
+      {/* Overlay */}
+      <div
+        className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
       {/* Sidebar */}
-      <aside className="w-72 bg-slate-900 text-slate-50 shadow-2xl flex flex-col">
+      <aside className="fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-50 shadow-2xl flex flex-col">
         {/* Top */}
         <div className="flex items-center justify-between px-4 h-16 border-b border-slate-800">
           <span className="text-sm font-semibold tracking-wide uppercase">
@@ -100,23 +203,22 @@ export default function DashboardSidebar({ open, onClose }) {
           <button
             onClick={onClose}
             className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-slate-800 text-xl"
+            aria-label="Close sidebar"
           >
             ×
           </button>
         </div>
 
-        {/* Links */}
+        {/* nav */}
         <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-1 text-sm">
           {DASHBOARD_ITEMS.map((item) => {
             const isOpen = openParent === item.label;
             const hasChildren = !!item.children?.length;
-
             return (
               <div key={item.label} className="space-y-1">
-                {/* Parent button */}
                 <button
                   onClick={() => handleParentClick(item.label, hasChildren)}
-                  className="w-full flex items-center justify-between rounded-lg px-3 py-2 hover:bg-slate-800/80 transition"
+                  className="w-full flex items-center justify-between rounded-lg px-3 py-2 hover:bg-slate-800/60 transition"
                 >
                   <span>{item.label}</span>
                   {hasChildren && (
@@ -130,7 +232,6 @@ export default function DashboardSidebar({ open, onClose }) {
                   )}
                 </button>
 
-                {/* Children */}
                 {hasChildren && isOpen && (
                   <div className="pl-4 space-y-1">
                     {item.children.map((child) => (
@@ -151,21 +252,54 @@ export default function DashboardSidebar({ open, onClose }) {
           })}
         </nav>
 
-        {/* Logout */}
+        {/* footer */}
         <div className="border-t border-slate-800 px-4 py-4">
-          <button className="w-full rounded-lg border border-red-400/60 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-100 hover:bg-red-500/20 transition">
-            Logout
-          </button>
+          <div className="flex gap-2">
+            {isLoggedIn ? (
+              // When user is logged in, show only Logout button
+              <button
+                className="flex-1 rounded-lg bg-red-500 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 transition"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            ) : (
+              <>
+                {/* Register (primary) */}
+                <button
+                  className="flex-1 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 px-3 py-2 text-sm font-medium text-white shadow-sm hover:opacity-95 transition"
+                  onClick={
+                    onRegisterClick ||
+                    (() => {
+                      console.log("Register clicked");
+                    })
+                  }
+                >
+                  Register
+                </button>
+
+                {/* Login (secondary) */}
+                <button
+                  className="flex-1 rounded-lg border border-slate-500/70 bg-slate-900/60 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-slate-800 transition"
+                  onClick={
+                    onLoginClick ||
+                    (() => {
+                      console.log("Login clicked");
+                    })
+                  }
+                >
+                  Login
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </aside>
 
-      {/* RIGHT: dashboard content switched by sidebar "router" */}
-      <main className="flex-1 bg-slate-950/90 overflow-y-auto">
-        {activePage === "dashboard" && <DashBoardPage />}
-        {activePage === "edit-profile" && <EditProfile />}
-        {activePage === "kyc-upload" && <ImageUpload />}
-        {activePage === "edit-bank" && <EditBankDetail />}
-      </main>
-    </div>
+      {/* Right-side slider content area */}
+      <section className="fixed inset-y-0 left-72 right-0 z-40 bg-slate-950/95 text-slate-50 border-l border-slate-800 overflow-y-auto p-4 md:p-6">
+        {renderRightPanelContent()}
+      </section>
+    </>
   );
 }

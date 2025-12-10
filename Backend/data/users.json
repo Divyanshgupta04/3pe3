@@ -1,0 +1,43 @@
+[
+  {
+    "id": "1765350856345",
+    "name": "test-4",
+    "email": "test4@gmail.com",
+    "password": "$2b$10$V/zNxa.EreXw5LVelOBz8.dkNIxY7e0KiCsPJvhCwZPba2rBIcRd6",
+    "phone": "1234556677",
+    "address": "test",
+    "sponsorId": "12344567",
+    "sponsorName": "pratik",
+    "inviteCode": "LS443938",
+    "balance": 0,
+    "totalIncome": 0,
+    "withdrawal": 0,
+    "freedomIncome": 0,
+    "dailyBonusIncome": 0,
+    "rankRewardIncome": 0,
+    "lastDailyCredit": "2025-12-10",
+    "createdAt": "2025-12-10T07:14:16.345Z",
+    "directInviteIds": [
+      "1765351983443"
+    ]
+  },
+  {
+    "id": "1765351983443",
+    "name": "test-5",
+    "email": "test5@gmail.com",
+    "password": "$2b$10$KldHlS5fdzZtczYnw3Z2bOteOVDPtUfhCSnF4GnPCurDfH.6Fno6q",
+    "phone": "1234567891",
+    "address": "test",
+    "sponsorId": "LS443938",
+    "sponsorName": "test-4",
+    "inviteCode": "LS700971",
+    "balance": 0,
+    "totalIncome": 0,
+    "withdrawal": 0,
+    "freedomIncome": 0,
+    "dailyBonusIncome": 0,
+    "rankRewardIncome": 0,
+    "lastDailyCredit": "2025-12-10",
+    "createdAt": "2025-12-10T07:33:03.443Z"
+  }
+]

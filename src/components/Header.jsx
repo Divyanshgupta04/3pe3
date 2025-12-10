@@ -10,6 +10,8 @@ export default function Header({
   setMobileOpen,
   scrollToId,
   NAV_ITEMS,
+  onLoginClick,
+  onRegisterClick,
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false); // local state only for sidebar
 
@@ -19,6 +21,14 @@ export default function Header({
       <DashboardSidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onLoginClick={() => {
+          setSidebarOpen(false);
+          onLoginClick && onLoginClick();
+        }}
+        onRegisterClick={() => {
+          setSidebarOpen(false);
+          onRegisterClick && onRegisterClick();
+        }}
       >
         {/* Right side content: Dashboard page */}
         <DashBoardPage />
