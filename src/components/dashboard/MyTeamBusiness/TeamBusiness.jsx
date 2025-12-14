@@ -1,51 +1,43 @@
 import React from "react";
 
 export default function TeamBusiness() {
-  const incomes = [400, 100, 50, 50, 50, 50, 10, 10, 10, 10];
+  // Autopool Package (as per provided chart)
+  const rows = [
+    { level: 1, team: 3, poolIncome: 3000 },
+    { level: 2, team: 9, poolIncome: 6000 },
+    { level: 3, team: 27, poolIncome: 9000 },
+    { level: 4, team: 81, poolIncome: 12000 },
+    { level: 5, team: 243, poolIncome: 15000 },
+    { level: 6, team: 729, poolIncome: 18000 },
+    { level: 7, team: 2187, poolIncome: 21000 },
+    { level: 8, team: 6561, poolIncome: 24000 },
+    { level: 9, team: 19683, poolIncome: 27000 },
+    { level: 10, team: 59049, poolIncome: 30000 },
+  ];
 
   return (
-    <div className="p-6 bg-white text-black h-full">
-      <h1 className="text-2xl font-semibold mb-4">
-        Team Business Income
-      </h1>
+    <div className="p-6 bg-white text-black">
+      <h1 className="text-2xl font-semibold mb-4">Autopool Package</h1>
+      <div className="text-xs text-slate-500 mb-4">Package Only 3000 Rs</div>
 
       <div className="overflow-auto rounded-xl border border-gray-300">
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="border-b border-gray-300 bg-white">
+              <th className="p-3 border-r font-semibold text-left">S.N</th>
               <th className="p-3 border-r font-semibold text-left">Level</th>
-              <th className="p-3 border-r font-semibold text-left">Income</th>
               <th className="p-3 border-r font-semibold text-left">Team</th>
-              <th className="p-3 border-r font-semibold text-left">Business</th>
-              <th className="p-3 font-semibold text-center">Action</th>
+              <th className="p-3 font-semibold text-left">Pool Income</th>
             </tr>
           </thead>
 
           <tbody>
-            {[1,2,3,4,5,6,7,8,9,10].map((level, index) => (
-              <tr
-                key={level}
-                className="border-b border-gray-200 hover:bg-gray-100 transition"
-              >
-                <td className="p-3 border-r font-medium">
-                  Level {level}
-                </td>
-
-                <td className="p-3 border-r font-medium">
-                  ₹ {incomes[index]}
-                </td>
-
-                <td className="p-3 border-r">0</td>
-                <td className="p-3 border-r">0</td>
-
-                <td className="p-3 text-center">
-                  <button
-                    className="px-4 py-1.5 border border-black rounded-full text-xs font-medium hover:bg-black hover:text-white transition"
-                    onClick={() => alert(`View details for level ${level}`)}
-                  >
-                    View
-                  </button>
-                </td>
+            {rows.map((r, idx) => (
+              <tr key={r.level} className="border-b border-gray-200 hover:bg-gray-100 transition">
+                <td className="p-3 border-r">{idx + 1}</td>
+                <td className="p-3 border-r font-medium">LEVEL {r.level}</td>
+                <td className="p-3 border-r">{r.team.toLocaleString("en-IN")}</td>
+                <td className="p-3">₹ {r.poolIncome.toLocaleString("en-IN")}</td>
               </tr>
             ))}
           </tbody>

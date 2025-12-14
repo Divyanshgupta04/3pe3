@@ -9,6 +9,8 @@ import {
   FiCopy,
   FiCheck,
   FiArrowRight,
+  FiFileText,
+  FiCreditCard,
 } from "react-icons/fi";
 
 export default function WelcomePage({
@@ -17,6 +19,8 @@ export default function WelcomePage({
   password = "password123",
   inviteCode = "LS-INV-1029",
   onContinue,
+  onViewWelcomeLetter,
+  onCreateIdCard,
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -132,7 +136,7 @@ export default function WelcomePage({
               </p>
             </div>
 
-            {/* Continue */}
+            {/* Continue + extra actions */}
             <div className="rounded-2xl bg-slate-900 border border-slate-800 p-4">
               <button
                 onClick={onContinue}
@@ -141,6 +145,30 @@ export default function WelcomePage({
                 Go to Dashboard
                 <FiArrowRight />
               </button>
+
+              {(onViewWelcomeLetter || onCreateIdCard) && (
+                <div className="grid sm:grid-cols-2 gap-2 mt-3">
+                  {onViewWelcomeLetter && (
+                    <button
+                      onClick={onViewWelcomeLetter}
+                      className="w-full rounded-xl py-2 text-xs font-medium bg-slate-950 border border-slate-800 text-slate-200 flex items-center justify-center gap-2 hover:bg-slate-900 transition"
+                    >
+                      <FiFileText />
+                      Welcome Letter
+                    </button>
+                  )}
+
+                  {onCreateIdCard && (
+                    <button
+                      onClick={onCreateIdCard}
+                      className="w-full rounded-xl py-2 text-xs font-medium bg-slate-950 border border-slate-800 text-slate-200 flex items-center justify-center gap-2 hover:bg-slate-900 transition"
+                    >
+                      <FiCreditCard />
+                      Create ID Card
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

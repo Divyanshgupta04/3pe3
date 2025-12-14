@@ -10,6 +10,7 @@ const kycRoutes = require('./routes/kyc');
 const dashboardRoutes = require('./routes/dashboard');
 const withdrawalsRoutes = require('./routes/withdrawals');
 const epinsRoutes = require('./routes/epins');
+const teamRoutes = require('./routes/team');
 const adminRoutes = require('./routes/admin');
 const testRoutes = require('./routes/test');
 
@@ -34,6 +35,7 @@ app.use('/api/kyc', kycRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/withdrawals', withdrawalsRoutes);
 app.use('/api/epins', epinsRoutes);
+app.use('/api/team', teamRoutes);
 app.use('/api/test', testRoutes);
 // Admin routes (no /api prefix as per requirement: /admin/login)
 app.use('/admin', adminRoutes);

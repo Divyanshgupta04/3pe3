@@ -97,6 +97,14 @@ function generateInviteCode(users) {
   return code;
 }
 
+function generateUserId(users) {
+  let id;
+  do {
+    id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  } while (users.some((u) => String(u.id) === id));
+  return id;
+}
+
 // Simple admin login: username: admin, password: admin123
 router.post('/login', (req, res) => {
   const { username, password } = req.body || {};
@@ -135,6 +143,22 @@ function adminAuth(req, res, next) {
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
 }
+
+function normalizeIdValue(v) {
+  if (v === undefined || v === null) return '';
+  return String(v).trim();
+}
+
+function assertUnique(users, field, value, currentUserId) {
+  const v = normalizeIdValue(value);
+  if (!v) return null;
+
+  const clash = users.find((u) => u.id !== currentUserId && normalizeIdValue(u[field]) === v);
+  if (clash) {
+    return `${field} already used by another user.`;
+  }
+  return null;
+}
 // Create a new member from admin panel
 // Note: This is separate from /api/auth/register and is intended for "company dedicated" creation.
 router.post('/users', adminAuth, (req, res) => {
@@ -153,7 +177,7 @@ router.post('/users', adminAuth, (req, res) => {
   const inviteCode = generateInviteCode(users);
 
   const newUser = {
-    id: Date.now().toString(),
+    id: generateUserId(users),
     name,
     email,
     // NOTE: For parity with the current codebase (file-backed), keep password as plain text here.
@@ -231,6 +255,10 @@ router.get('/users', adminAuth, (req, res) => {
       dailyBonusIncome: user.dailyBonusIncome || 0,
       rankRewardIncome: user.rankRewardIncome || 0,
       createdAt: user.createdAt || null,
+      // payment info (for admin viewing)
+      upiId: user.upiId || '',
+      upiNo: user.upiNo || '',
+      bankDetails: user.bankDetails || null,
       directInviteCount: userInvitees.length,
       invitees: userInvitees.map((inv) => ({
         id: inv.id,
@@ -244,6 +272,52 @@ router.get('/users', adminAuth, (req, res) => {
   });
 
   res.json({ users: result });
+});
+
+// Update a user's payment details (admin-only)
+// Useful when paying withdrawal requests.
+router.put('/users/:id/payment-details', adminAuth, (req, res) => {
+  const users = loadUsers();
+  const idx = users.findIndex((u) => u.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ message: 'User not found' });
+
+  // Optional uniqueness checks similar to /api/profile
+  const upiErr = assertUnique(users, 'upiId', req.body.upiId, req.params.id);
+  if (upiErr) return res.status(409).json({ message: upiErr });
+
+  const nextBankAccountNo = normalizeIdValue(req.body?.bankDetails?.accountNo);
+  if (nextBankAccountNo) {
+    const clash = users.find(
+      (u) =>
+        u.id !== req.params.id &&
+        normalizeIdValue(u?.bankDetails?.accountNo) === nextBankAccountNo
+    );
+    if (clash) {
+      return res.status(409).json({ message: 'bankDetails.accountNo already used by another user.' });
+    }
+  }
+
+  const updated = { ...users[idx] };
+
+  if (req.body.upiId !== undefined) updated.upiId = req.body.upiId;
+  if (req.body.upiNo !== undefined) updated.upiNo = req.body.upiNo;
+
+  if (req.body.bankDetails && typeof req.body.bankDetails === 'object') {
+    updated.bankDetails = {
+      ...(updated.bankDetails || {}),
+      accountHolder: req.body.bankDetails.accountHolder ?? updated.bankDetails?.accountHolder ?? '',
+      bankName: req.body.bankDetails.bankName ?? updated.bankDetails?.bankName ?? '',
+      accountNo: req.body.bankDetails.accountNo ?? updated.bankDetails?.accountNo ?? '',
+      ifsc: req.body.bankDetails.ifsc ?? updated.bankDetails?.ifsc ?? '',
+      branchName: req.body.bankDetails.branchName ?? updated.bankDetails?.branchName ?? '',
+    };
+  }
+
+  users[idx] = updated;
+  saveUsers(users);
+
+  const { password, ...userWithoutPassword } = updated;
+  return res.json({ user: userWithoutPassword });
 });
 
 // Set role (admin-only) e.g. member | franchise

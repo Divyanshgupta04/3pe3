@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 
+import TransferToUser from "./e-pin/TransferToUser";
+
 const API_BASE = "http://localhost:5000";
 
 // =================== LEFT MENU ITEMS ===================
@@ -84,12 +86,9 @@ const MP_Epin = () => (
     <h2 className="text-lg md:text-xl font-semibold text-slate-900 mb-4">
       E-Pin Management
     </h2>
-    <MPCard title="Available E-Pins">
-      <p>List of E-Pins with value, used/unused, generated date, transfer etc.</p>
-    </MPCard>
-    <MPCard title="Generate / Transfer">
-      <p>Form for new pins / transfer to team members.</p>
-    </MPCard>
+
+    {/* Transfer screen shows your User ID + Invite Code at the top */}
+    <TransferToUser />
   </div>
 );
 

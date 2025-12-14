@@ -44,9 +44,11 @@ export default function Withdraw() {
       }
 
       if (listRes.ok) {
-        setWithdrawals(Array.isArray(listData.withdrawals) ? listData.withdrawals : []);
+        setWithdrawals(
+          Array.isArray(listData.withdrawals) ? listData.withdrawals : []
+        );
       }
-    } catch (e) {
+    } catch {
       setMsg("Failed to load withdrawals.");
     } finally {
       setLoading(false);
@@ -60,28 +62,14 @@ export default function Withdraw() {
   const handleSubmit = async () => {
     setMsg("");
     const token = localStorage.getItem("token");
-    if (!token) {
-      setMsg("Please login again.");
-      return;
-    }
+    if (!token) return setMsg("Please login again.");
 
     const amt = Number(amount);
-    if (!Number.isFinite(amt) || amt <= 0) {
-      setMsg("Enter a valid amount.");
-      return;
-    }
-    if (amt > balance) {
-      setMsg("Insufficient balance.");
-      return;
-    }
-    if (!String(upiId).trim()) {
-      setMsg("UPI ID is required.");
-      return;
-    }
-    if (!String(upiNo).trim()) {
-      setMsg("UPI Number is required.");
-      return;
-    }
+    if (!Number.isFinite(amt) || amt <= 0)
+      return setMsg("Enter a valid amount.");
+    if (amt > balance) return setMsg("Insufficient balance.");
+    if (!upiId.trim()) return setMsg("UPI ID is required.");
+    if (!upiNo.trim()) return setMsg("UPI Number is required.");
 
     try {
       setSubmitting(true);
@@ -93,16 +81,14 @@ export default function Withdraw() {
         },
         body: JSON.stringify({ amount: amt, upiId, upiNo }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setMsg(data.message || "Withdrawal request failed.");
-        return;
-      }
 
-      setMsg("Withdrawal request submitted. Status: pending.");
+      const data = await res.json();
+      if (!res.ok) return setMsg(data.message || "Withdrawal failed.");
+
+      setMsg("Withdrawal request submitted. Status: Pending.");
       setWithdrawals((prev) => [data.withdrawal, ...prev]);
       setAmount("");
-    } catch (e) {
+    } catch {
       setMsg("Withdrawal request failed.");
     } finally {
       setSubmitting(false);
@@ -111,70 +97,86 @@ export default function Withdraw() {
 
   if (loading) {
     return (
-      <div className="w-full min-h-screen bg-slate-100 flex items-center justify-center p-6">
-        <div className="text-slate-600">Loading withdrawals...</div>
+      <div className="w-full min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 flex items-center justify-center">
+        <div className="text-indigo-600 font-medium">Loading withdrawals…</div>
       </div>
     );
   }
 
   return (
-    <div className="w-full min-h-screen bg-slate-100 flex items-start sm:items-center justify-center p-3 sm:p-6">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-md border border-slate-100 p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
+    <div className="w-full min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 flex justify-center p-6">
+      <div className="w-full max-w-5xl space-y-6">
+
+        {/* Header */}
+        <div className="flex justify-between items-end">
           <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Withdraw</h2>
-            <p className="text-xs text-slate-500 mt-1">Available balance: <span className="font-mono">{balance}</span></p>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">
+              Withdraw Funds
+            </h2>
+            <p className="text-sm text-gray-600">
+              Available Balance:
+              <span className="ml-2 px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold">
+                ₹ {balance}
+              </span>
+            </p>
           </div>
-          <button onClick={loadAll} className="border px-3 py-2 rounded text-sm">Refresh</button>
+
+          <button
+            onClick={loadAll}
+            className="px-4 py-2 rounded-full text-sm font-medium bg-white shadow hover:shadow-md transition"
+          >
+            🔄 Refresh
+          </button>
         </div>
 
-        {msg && <div className="mb-4 rounded-lg border bg-white px-3 py-2 text-sm">{msg}</div>}
+        {/* Message */}
+        {msg && (
+          <div className="rounded-xl px-4 py-3 text-sm bg-yellow-100 text-yellow-800 border border-yellow-200">
+            {msg}
+          </div>
+        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs sm:text-sm font-medium text-slate-600">UPI ID</label>
-            <input
-              value={upiId}
-              onChange={(e) => setUpiId(e.target.value)}
-              className="w-full mt-1.5 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900"
-              placeholder="yourid@bank"
-            />
-          </div>
-          <div>
-            <label className="text-xs sm:text-sm font-medium text-slate-600">UPI Number</label>
-            <input
-              value={upiNo}
-              onChange={(e) => setUpiNo(e.target.value)}
-              className="w-full mt-1.5 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900"
-              placeholder="UPI linked mobile number"
-            />
-          </div>
-          <div>
-            <label className="text-xs sm:text-sm font-medium text-slate-600">Amount</label>
-            <input
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full mt-1.5 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900"
-              placeholder="Enter amount"
-            />
-            <p className="text-[11px] text-slate-400 mt-1">Amount must be less than or equal to balance.</p>
-          </div>
-          <div className="flex items-end">
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {submitting ? "Submitting..." : "Submit Withdrawal"}
-            </button>
-          </div>
+        {/* Withdraw Form */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            value={upiId}
+            onChange={(e) => setUpiId(e.target.value)}
+            placeholder="UPI ID (yourid@bank)"
+            className="border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none"
+          />
+
+          <input
+            value={upiNo}
+            onChange={(e) => setUpiNo(e.target.value)}
+            placeholder="UPI Linked Mobile Number"
+            className="border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none"
+          />
+
+          <input
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="Withdrawal Amount"
+            className="border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none"
+          />
+
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="rounded-xl px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-pink-600 hover:opacity-90 disabled:opacity-60"
+          >
+            {submitting ? "Submitting..." : "Submit Withdrawal"}
+          </button>
         </div>
 
-        <div className="mt-8">
-          <h3 className="text-sm font-semibold text-slate-800 mb-2">My Requests</h3>
-          <div className="overflow-auto border rounded">
+        {/* History */}
+        <div className="bg-white rounded-2xl shadow-lg p-5">
+          <h3 className="font-semibold mb-3 text-indigo-700">
+            My Withdrawal Requests
+          </h3>
+
+          <div className="overflow-auto">
             <table className="min-w-full text-sm">
-              <thead className="bg-slate-50">
+              <thead className="bg-indigo-50">
                 <tr>
                   <th className="p-3 text-left">ID</th>
                   <th className="p-3 text-right">Amount</th>
@@ -184,22 +186,37 @@ export default function Withdraw() {
               </thead>
               <tbody>
                 {withdrawals.map((w) => (
-                  <tr key={w.id} className="border-t">
+                  <tr key={w.id} className="border-b hover:bg-indigo-50 transition">
                     <td className="p-3 font-mono">{w.id}</td>
-                    <td className="p-3 text-right">{w.amount}</td>
-                    <td className="p-3">{w.status}</td>
-                    <td className="p-3">{w.requestedAt ? String(w.requestedAt).slice(0, 19).replace("T", " ") : "-"}</td>
+                    <td className="p-3 text-right font-semibold">
+                      ₹ {w.amount}
+                    </td>
+                    <td className="p-3">
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                        {w.status}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      {w.requestedAt
+                        ? String(w.requestedAt)
+                            .slice(0, 19)
+                            .replace("T", " ")
+                        : "-"}
+                    </td>
                   </tr>
                 ))}
                 {withdrawals.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="p-6 text-center text-slate-500">No requests yet.</td>
+                    <td colSpan={4} className="p-6 text-center text-gray-500">
+                      No requests yet.
+                    </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
+
       </div>
     </div>
   );

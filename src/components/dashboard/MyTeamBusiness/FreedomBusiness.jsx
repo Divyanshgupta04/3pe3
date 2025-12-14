@@ -1,80 +1,42 @@
-// src/components/FreedomBusiness.jsx
 import React from "react";
-import { TrendingUp, Users, Briefcase } from "lucide-react";
 
 export default function FreedomBusiness() {
+  // Upgrade Income (as per provided chart)
   const rows = [
-    { level: 1, income: 30 },
-    { level: 2, income: 60 },
-    { level: 3, income: 120 },
-    { level: 4, income: 240 },
-    { level: 5, income: 480 },
-    { level: 6, income: 960 },
-    { level: 7, income: 1920 },
-    { level: 8, income: 3840 },
-    { level: 9, income: 7680 },
-    { level: 10, income: 15360 },
+    { level: 1, income: 10000, upgrade: 1000 },
+    { level: 2, income: 20000, upgrade: 2000 },
+    { level: 3, income: 30000, upgrade: 3000 },
+    { level: 4, income: 40000, upgrade: 4000 },
+    { level: 5, income: 50000, upgrade: 5000 },
+    { level: 6, income: 60000, upgrade: 6000 },
+    { level: 7, income: 70000, upgrade: 7000 },
+    { level: 8, income: 80000, upgrade: 8000 },
+    { level: 9, income: 90000, upgrade: 9000 },
+    { level: 10, income: 100000, upgrade: 10000 },
   ];
 
   return (
     <div className="p-6 bg-white text-black">
-      {/* Title */}
-      <div className="flex items-center gap-2 mb-5">
-        <TrendingUp className="text-black" />
-        <h2 className="text-2xl font-semibold">
-          Freedom Business Income
-        </h2>
-      </div>
+      <h1 className="text-2xl font-semibold mb-5">Upgrade Income</h1>
 
-      {/* Table */}
-      <div className="border rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="overflow-auto rounded-xl border border-gray-300">
+        <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="border-b bg-white">
-              <th className="px-4 py-3 text-left font-semibold">Level</th>
-              <th className="px-4 py-3 text-left font-semibold">Income</th>
-              <th className="px-4 py-3 text-left font-semibold flex items-center gap-1">
-                <Users size={14} /> Team
-              </th>
-              <th className="px-4 py-3 text-left font-semibold flex items-center gap-1">
-                <Briefcase size={14} /> Business
-              </th>
-              <th className="px-4 py-3 text-center font-semibold">Action</th>
+            <tr className="border-b border-gray-300 bg-white">
+              <th className="p-3 border-r font-semibold text-left">S.N</th>
+              <th className="p-3 border-r font-semibold text-left">Level</th>
+              <th className="p-3 border-r font-semibold text-left">Income</th>
+              <th className="p-3 font-semibold text-left">Upgrade</th>
             </tr>
           </thead>
 
           <tbody>
-            {rows.map((r) => (
-              <tr
-                key={r.level}
-                className="border-b last:border-none hover:bg-gray-100 transition"
-              >
-                <td className="px-4 py-3">Level {r.level}</td>
-
-                <td className="px-4 py-3 font-medium">
-                  ₹ {r.income}
-                </td>
-
-                <td className="px-4 py-3">
-                  <div className="h-2 w-20 bg-gray-200 rounded-full">
-                    <div className="h-full w-[10%] bg-black rounded-full" />
-                  </div>
-                </td>
-
-                <td className="px-4 py-3">
-                  <div className="h-2 w-24 bg-gray-200 rounded-full">
-                    <div className="h-full w-[15%] bg-black rounded-full" />
-                  </div>
-                </td>
-
-                <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => alert(`View details for level ${r.level}`)}
-                    className="px-4 py-1.5 border border-black rounded-full text-xs font-medium hover:bg-black hover:text-white transition"
-                  >
-                    View
-                  </button>
-                </td>
+            {rows.map((r, idx) => (
+              <tr key={r.level} className="border-b border-gray-200 hover:bg-gray-100 transition">
+                <td className="p-3 border-r">{idx + 1}</td>
+                <td className="p-3 border-r font-medium">LEVEL {r.level}</td>
+                <td className="p-3 border-r">₹ {r.income.toLocaleString("en-IN")}</td>
+                <td className="p-3">₹ {r.upgrade.toLocaleString("en-IN")}</td>
               </tr>
             ))}
           </tbody>

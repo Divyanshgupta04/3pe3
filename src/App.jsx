@@ -18,6 +18,8 @@ import MemberLayout from "./components/dashboard/MemberDashboard";
 import OfficialLoginPage from "./components/dashboard/Login";
 import OfficialRegisterPage from "./components/dashboard/Register";
 import WelcomePage from "./components/dashboard/WelcomePage";
+import WelcomeLetter from "./components/dashboard/WelcomeLetter";
+import CreateIdCard from "./components/dashboard/CreateIdCard";
 
 const NAV_ITEMS = [
   { label: "Home", id: "home" } ,
@@ -33,7 +35,7 @@ const NAV_ITEMS = [
 export default function App() {
   const [activeSection, setActiveSection] = useState("home");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [authView, setAuthView] = useState(null); // "login" | "register" | "welcome"
+  const [authView, setAuthView] = useState(null); // "login" | "register" | "welcome" | "welcomeLetter" | "idCard"
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem("token")
   );
@@ -168,6 +170,33 @@ export default function App() {
         onContinue={() => {
           setAuthView(null);
         }}
+        onViewWelcomeLetter={() => setAuthView("welcomeLetter")}
+        onCreateIdCard={() => setAuthView("idCard")}
+      />
+    );
+  }
+
+  if (authView === "welcomeLetter" && welcomeData) {
+    return (
+      <WelcomeLetter
+        userName={welcomeData.name}
+        email={welcomeData.email}
+        inviteCode={welcomeData.inviteCode}
+        onBack={() => setAuthView("welcome")}
+        onCreateIdCard={() => setAuthView("idCard")}
+        onContinue={() => setAuthView(null)}
+      />
+    );
+  }
+
+  if (authView === "idCard" && welcomeData) {
+    return (
+      <CreateIdCard
+        userName={welcomeData.name}
+        email={welcomeData.email}
+        inviteCode={welcomeData.inviteCode}
+        onBack={() => setAuthView("welcomeLetter")}
+        onContinue={() => setAuthView(null)}
       />
     );
   }

@@ -76,6 +76,17 @@ function IconLogout() {
   );
 }
 
+function IconBank() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 10V20M9 10V20M15 10V20M19 10V20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 20h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 3l9 6.5H3L12 3z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 /* -------------------- Reusable small UI components -------------------- */
 function SidebarButton({ label, active, icon, onClick }) {
   return (
@@ -146,6 +157,14 @@ export default function AdminPage() {
   const [epinTransfer, setEpinTransfer] = useState({ toUserId: "", count: "1" });
   const [transferringEpins, setTransferringEpins] = useState(false);
   const [lastEpinTransfer, setLastEpinTransfer] = useState(null);
+
+  // members: invite people section toggle
+  const [expandedInviteUserId, setExpandedInviteUserId] = useState(null);
+
+  // withdrawals: edit payment details (bank/upi) inline
+  const [expandedPaymentUserId, setExpandedPaymentUserId] = useState(null);
+  const [paymentEdits, setPaymentEdits] = useState({}); // { [userId]: { upiId, upiNo, bankDetails: {...} } }
+  const [savingPaymentUserId, setSavingPaymentUserId] = useState(null);
 
   const API_BASE = "http://localhost:5000";
 
@@ -344,6 +363,14 @@ export default function AdminPage() {
     } catch (e) {}
   }
 
+  async function copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(String(text));
+    } catch (e) {
+      // ignore (clipboard might be blocked)
+    }
+  }
+
   // ---------- Derived totals for Income page ----------
   const totalIncome = users.reduce((s, u) => s + (Number(u?.totalIncome) || 0), 0);
   const totalBalance = users.reduce((s, u) => s + (Number(u?.balance) || 0), 0);
@@ -417,8 +444,29 @@ export default function AdminPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to approve withdrawal");
 
-      // update list in-place
-      setWithdrawals((prev) => prev.map((w) => (w.id === withdrawalId ? { ...w, ...data.withdrawal, status: data.withdrawal?.status || "approved" } : w)));
+      // update list in-place (also refresh user balance if backend returned it)
+      setWithdrawals((prev) =>
+        prev.map((w) =>
+          w.id === withdrawalId
+            ? {
+                ...w,
+                ...data.withdrawal,
+                status: data.withdrawal?.status || "approved",
+                user: w.user
+                  ? {
+                      ...w.user,
+                      ...(data.user?.balance !== undefined
+                        ? { balance: data.user.balance }
+                        : {}),
+                      ...(data.user?.withdrawal !== undefined
+                        ? { withdrawal: data.user.withdrawal }
+                        : {}),
+                    }
+                  : w.user,
+              }
+            : w
+        )
+      );
 
       // keep members list somewhat fresh (balances change)
       if (users.length > 0) {
@@ -431,13 +479,113 @@ export default function AdminPage() {
     }
   }
 
+  function openPaymentEditor(user) {
+    if (!user?.id) return;
+    setExpandedPaymentUserId((prev) => (prev === user.id ? null : user.id));
+
+    setPaymentEdits((prev) => {
+      // keep existing edits if already started
+      if (prev[user.id]) return prev;
+
+      return {
+        ...prev,
+        [user.id]: {
+          upiId: user.upiId || "",
+          upiNo: user.upiNo || "",
+          bankDetails: {
+            accountHolder: user.bankDetails?.accountHolder || "",
+            bankName: user.bankDetails?.bankName || "",
+            accountNo: user.bankDetails?.accountNo || "",
+            ifsc: user.bankDetails?.ifsc || "",
+            branchName: user.bankDetails?.branchName || "",
+          },
+        },
+      };
+    });
+  }
+
+  function updatePaymentEdit(userId, field, value) {
+    setPaymentEdits((prev) => {
+      const current = prev[userId] || { upiId: "", upiNo: "", bankDetails: {} };
+
+      if (field.startsWith("bankDetails.")) {
+        const key = field.replace("bankDetails.", "");
+        return {
+          ...prev,
+          [userId]: {
+            ...current,
+            bankDetails: {
+              ...(current.bankDetails || {}),
+              [key]: key === "ifsc" ? String(value || "").toUpperCase() : value,
+            },
+          },
+        };
+      }
+
+      return {
+        ...prev,
+        [userId]: { ...current, [field]: value },
+      };
+    });
+  }
+
+  async function savePaymentDetails(userId) {
+    if (!adminToken || !userId) return;
+    const payload = paymentEdits[userId];
+    if (!payload) return;
+
+    setSavingPaymentUserId(userId);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/admin/users/${userId}/payment-details`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({
+          upiId: payload.upiId,
+          upiNo: payload.upiNo,
+          bankDetails: payload.bankDetails,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to update payment details");
+
+      // update users list (if loaded)
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, ...data.user } : u)));
+
+      // update withdrawals list so admin sees latest bank/upi lines
+      setWithdrawals((prev) =>
+        prev.map((w) =>
+          w.user?.id === userId
+            ? {
+                ...w,
+                user: {
+                  ...(w.user || {}),
+                  upiId: data.user?.upiId || "",
+                  upiNo: data.user?.upiNo || "",
+                  bankDetails: data.user?.bankDetails || null,
+                },
+              }
+            : w
+        )
+      );
+    } catch (err) {
+      setError(err.message || "Failed to update payment details");
+    } finally {
+      setSavingPaymentUserId(null);
+    }
+  }
+
   function openPage(page) {
     setCurrentPage(page);
     try {
       window.history.pushState({}, "", `/admin/${page}`);
     } catch (e) {}
-    // lazy-load users when going to members
-    if (page === "members" && users.length === 0 && adminToken) {
+    // lazy-load users when going to members/bank details
+    if ((page === "members" || page === "bank") && users.length === 0 && adminToken) {
       fetchUsers(adminToken);
     }
     if (page === "kyc" && kycs.length === 0 && adminToken) {
@@ -496,6 +644,7 @@ export default function AdminPage() {
         <nav className="flex-1 space-y-1">
           <SidebarButton label="Dashboard" active={currentPage === "dashboard"} icon={<IconHome />} onClick={() => openPage("dashboard")} />
           <SidebarButton label="Members" active={currentPage === "members"} icon={<IconUsers />} onClick={() => openPage("members")} />
+          <SidebarButton label="Bank Details" active={currentPage === "bank"} icon={<IconBank />} onClick={() => openPage("bank")} />
           <SidebarButton label="KYC" active={currentPage === "kyc"} icon={<IconFile />} onClick={() => openPage("kyc")} />
           <SidebarButton label="Withdrawals" active={currentPage === "withdrawals"} icon={<IconDollar />} onClick={() => openPage("withdrawals")} />
           <SidebarButton label="E-Pin" active={currentPage === "epin"} icon={<IconKey />} onClick={() => openPage("epin")} />
@@ -610,8 +759,10 @@ export default function AdminPage() {
                     <thead className="bg-slate-50 sticky top-0">
                       <tr>
                         <th className="p-3 text-left">Name</th>
+                        <th className="p-3 text-left">User ID</th>
                         <th className="p-3 text-left">Email</th>
                         <th className="p-3 text-left">Invite Code</th>
+                        <th className="p-3 text-left">Invite People</th>
                         <th className="p-3 text-left">Role</th>
                         <th className="p-3 text-left">E-Pin</th>
                         <th className="p-3 text-left">Status</th>
@@ -620,28 +771,197 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {users.map((u) => (
-                        <tr key={u.id} className="border-t hover:bg-slate-50">
-                          <td className="p-3">{u.name}</td>
-                          <td className="p-3">{u.email}</td>
-                          <td className="p-3 font-mono text-blue-600">{u.inviteCode}</td>
-                          <td className="p-3">
-                            <select
-                              value={u.role || "member"}
-                              onChange={(e) => updateUserRole(u.id, e.target.value)}
-                              className="border rounded px-2 py-1 text-xs"
-                            >
-                              <option value="member">member</option>
-                              <option value="franchise">franchise</option>
-                            </select>
+                      {users.map((u) => {
+                        const inviteCount = u.directInviteCount ?? (Array.isArray(u.invitees) ? u.invitees.length : 0);
+                        const isExpanded = expandedInviteUserId === u.id;
+
+                        return (
+                          <React.Fragment key={u.id}>
+                            <tr className="border-t hover:bg-slate-50">
+                              <td className="p-3">{u.name}</td>
+                              <td className="p-3 font-mono text-xs">{u.id}</td>
+                              <td className="p-3">{u.email}</td>
+                              <td className="p-3">
+                                <button
+                                  type="button"
+                                  onClick={() => copyToClipboard(u.inviteCode)}
+                                  className="font-mono text-blue-600 hover:underline"
+                                  title="Copy invite code"
+                                >
+                                  {u.inviteCode}
+                                </button>
+                              </td>
+                              <td className="p-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-slate-600">{inviteCount}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedInviteUserId((prev) => (prev === u.id ? null : u.id))}
+                                    className="border px-2 py-1 rounded text-xs hover:bg-white"
+                                  >
+                                    {isExpanded ? "Hide" : "View"}
+                                  </button>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <select
+                                  value={u.role || "member"}
+                                  onChange={(e) => updateUserRole(u.id, e.target.value)}
+                                  className="border rounded px-2 py-1 text-xs"
+                                >
+                                  <option value="member">member</option>
+                                  <option value="franchise">franchise</option>
+                                </select>
+                              </td>
+                              <td className="p-3 font-mono">{u.activationPin || "-"}</td>
+                              <td className="p-3">
+                                {u.isActivated ? (
+                                  <span className="text-green-600 font-semibold">Active</span>
+                                ) : (
+                                  <span className="text-slate-500">Inactive</span>
+                                )}
+                              </td>
+                              <td className="p-3 text-right">{u.balance ?? 0}</td>
+                              <td className="p-3 text-right font-semibold text-green-600">{u.totalIncome ?? 0}</td>
+                            </tr>
+
+                            {isExpanded && (
+                              <tr className="border-t bg-slate-50/60">
+                                <td colSpan={10} className="p-3">
+                                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                    <div className="bg-white border rounded p-3">
+                                      <div className="text-sm font-semibold mb-1">Invite People</div>
+                                      <div className="text-xs text-slate-600">
+                                        Share this invite code with new members (they will enter it in Sponsor Invite Code during registration).
+                                      </div>
+                                      <div className="mt-2 flex items-center gap-2">
+                                        <div className="font-mono text-sm px-2 py-1 border rounded bg-slate-50">
+                                          {u.inviteCode}
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => copyToClipboard(u.inviteCode)}
+                                          className="border px-3 py-1.5 rounded text-xs hover:bg-slate-50"
+                                        >
+                                          Copy
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    <div className="bg-white border rounded p-3">
+                                      <div className="text-sm font-semibold mb-2">Direct Invitees</div>
+                                      <div className="overflow-auto max-h-48">
+                                        <table className="min-w-full text-xs">
+                                          <thead className="bg-slate-50 sticky top-0">
+                                            <tr>
+                                              <th className="p-2 text-left">Name</th>
+                                              <th className="p-2 text-left">User ID</th>
+                                              <th className="p-2 text-left">Invite Code</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {(u.invitees || []).map((m) => (
+                                              <tr key={m.id} className="border-t">
+                                                <td className="p-2">{m.name}</td>
+                                                <td className="p-2 font-mono">{m.id}</td>
+                                                <td className="p-2 font-mono text-blue-700">{m.inviteCode}</td>
+                                              </tr>
+                                            ))}
+                                            {(u.invitees || []).length === 0 && (
+                                              <tr>
+                                                <td colSpan={3} className="p-3 text-center text-slate-500">
+                                                  No invitees yet.
+                                                </td>
+                                              </tr>
+                                            )}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                      {users.length === 0 && (
+                        <tr>
+                          <td colSpan={10} className="p-6 text-center text-slate-500">
+                            No members found.
                           </td>
-                          <td className="p-3 font-mono">{u.activationPin || "-"}</td>
-                          <td className="p-3">{u.isActivated ? <span className="text-green-600 font-semibold">Active</span> : <span className="text-slate-500">Inactive</span>}</td>
-                          <td className="p-3 text-right">{u.balance ?? 0}</td>
-                          <td className="p-3 text-right font-semibold text-green-600">{u.totalIncome ?? 0}</td>
                         </tr>
-                      ))}
-                      {users.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-slate-500">No members found.</td></tr>}
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Bank Details page */}
+          {currentPage === "bank" && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold">All Bank Details</h2>
+                <div className="text-xs text-slate-500">{users.length} members</div>
+              </div>
+
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => fetchUsers(adminToken)}
+                  className="border px-4 py-2 rounded"
+                >
+                  Refresh
+                </button>
+              </div>
+
+              {loadingUsers ? (
+                <div className="text-sm text-slate-500">Loading members...</div>
+              ) : (
+                <div className="overflow-auto max-h-[60vh] border rounded">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-slate-50 sticky top-0">
+                      <tr>
+                        <th className="p-3 text-left">User</th>
+                        <th className="p-3 text-left">UPI</th>
+                        <th className="p-3 text-left">Account Holder</th>
+                        <th className="p-3 text-left">Bank</th>
+                        <th className="p-3 text-left">Account No</th>
+                        <th className="p-3 text-left">IFSC</th>
+                        <th className="p-3 text-left">Branch</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((u) => {
+                        const b = u.bankDetails || {};
+                        return (
+                          <tr key={u.id} className="border-t hover:bg-slate-50">
+                            <td className="p-3">
+                              <div className="font-medium">{u.name}</div>
+                              <div className="text-xs text-slate-500">{u.email}</div>
+                              <div className="text-[11px] text-slate-500 font-mono">{u.id}</div>
+                            </td>
+                            <td className="p-3">
+                              <div className="font-mono text-xs">{u.upiId || "-"}</div>
+                              <div className="text-xs text-slate-500">{u.upiNo || ""}</div>
+                            </td>
+                            <td className="p-3 text-xs">{b.accountHolder || "-"}</td>
+                            <td className="p-3 text-xs">{b.bankName || "-"}</td>
+                            <td className="p-3 font-mono text-xs">{b.accountNo || "-"}</td>
+                            <td className="p-3 font-mono text-xs">{b.ifsc || "-"}</td>
+                            <td className="p-3 text-xs">{b.branchName || "-"}</td>
+                          </tr>
+                        );
+                      })}
+
+                      {users.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="p-6 text-center text-slate-500">
+                            No members found.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -763,46 +1083,221 @@ export default function AdminPage() {
                           : "-";
                         const upiLine = w.upiId || w.user?.upiId || "-";
                         const upiNoLine = w.upiNo || w.user?.upiNo || "";
+                        const userId = w.user?.id || w.userId;
+                        const isPaymentOpen = !!userId && expandedPaymentUserId === userId;
+                        const edit = userId ? paymentEdits[userId] : null;
+
                         return (
-                          <tr key={w.id} className="border-t hover:bg-slate-50">
-                            <td className="p-3 font-mono">{w.id}</td>
-                            <td className="p-3">
-                              <div className="font-medium">{w.user?.name || "-"}</div>
-                              <div className="text-xs text-slate-500">{w.user?.email || ""}</div>
-                            </td>
-                            <td className="p-3">
-                              <div className="font-mono">{upiLine}</div>
-                              <div className="text-xs text-slate-500">{upiNoLine}</div>
-                            </td>
-                            <td className="p-3">
-                              <div className="text-xs">{bankLine || "-"}</div>
-                              {bank?.ifsc ? <div className="text-[11px] text-slate-500 font-mono">{bank.ifsc}</div> : null}
-                            </td>
-                            <td className="p-3 text-right font-semibold">{w.amount}</td>
-                            <td className="p-3">
-                              {w.status === "pending" ? (
-                                <span className="text-amber-700 font-semibold">pending</span>
-                              ) : w.status === "approved" ? (
-                                <span className="text-emerald-700 font-semibold">approved</span>
-                              ) : (
-                                <span className="text-slate-600">{w.status}</span>
-                              )}
-                            </td>
-                            <td className="p-3">{w.requestedAt ? String(w.requestedAt).slice(0, 19).replace("T", " ") : "-"}</td>
-                            <td className="p-3 text-right">
-                              {w.status === "pending" ? (
-                                <button
-                                  onClick={() => approveWithdrawal(w.id)}
-                                  disabled={approvingWithdrawalId === w.id}
-                                  className="bg-emerald-600 text-white px-3 py-1.5 rounded text-xs disabled:opacity-60"
-                                >
-                                  {approvingWithdrawalId === w.id ? "Approving..." : "Approve"}
-                                </button>
-                              ) : (
-                                <span className="text-xs text-slate-500">-</span>
-                              )}
-                            </td>
-                          </tr>
+                          <React.Fragment key={w.id}>
+                            <tr className="border-t hover:bg-slate-50">
+                              <td className="p-3 font-mono">{w.id}</td>
+                              <td className="p-3">
+                                <div className="font-medium">{w.user?.name || "-"}</div>
+                                <div className="text-xs text-slate-500">{w.user?.email || ""}</div>
+                                {w.user?.balance !== undefined ? (
+                                  <div className="text-[11px] text-slate-500">
+                                    Balance: <span className="font-mono">₹{w.user.balance}</span>
+                                  </div>
+                                ) : null}
+                              </td>
+                              <td className="p-3">
+                                <div className="font-mono">{upiLine}</div>
+                                <div className="text-xs text-slate-500">{upiNoLine}</div>
+                              </td>
+                              <td className="p-3">
+                                <div className="space-y-0.5 text-xs">
+                                  <div>
+                                    <span className="text-slate-500">Holder:</span>{" "}
+                                    {bank?.accountHolder || "-"}
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-500">Bank:</span>{" "}
+                                    {bank?.bankName || "-"}
+                                  </div>
+                                  <div className="font-mono text-[11px]">
+                                    <span className="text-slate-500 font-sans">A/c:</span>{" "}
+                                    {bank?.accountNo || "-"}
+                                  </div>
+                                  <div className="font-mono text-[11px]">
+                                    <span className="text-slate-500 font-sans">IFSC:</span>{" "}
+                                    {bank?.ifsc || "-"}
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-500">Branch:</span>{" "}
+                                    {bank?.branchName || "-"}
+                                  </div>
+                                </div>
+
+                                {w.user?.id ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => openPaymentEditor(w.user)}
+                                    className="mt-2 inline-flex items-center gap-2 text-xs border px-2 py-1 rounded hover:bg-white"
+                                  >
+                                    {isPaymentOpen ? "Close" : "Edit"} Bank/UPI
+                                  </button>
+                                ) : null}
+                              </td>
+                              <td className="p-3 text-right font-semibold">{w.amount}</td>
+                              <td className="p-3">
+                                {w.status === "pending" ? (
+                                  <span className="text-amber-700 font-semibold">pending</span>
+                                ) : w.status === "approved" ? (
+                                  <span className="text-emerald-700 font-semibold">approved</span>
+                                ) : (
+                                  <span className="text-slate-600">{w.status}</span>
+                                )}
+                              </td>
+                              <td className="p-3">
+                                {w.requestedAt
+                                  ? String(w.requestedAt)
+                                      .slice(0, 19)
+                                      .replace("T", " ")
+                                  : "-"}
+                              </td>
+                              <td className="p-3 text-right">
+                                {w.status === "pending" ? (
+                                  <button
+                                    onClick={() => approveWithdrawal(w.id)}
+                                    disabled={approvingWithdrawalId === w.id}
+                                    className="bg-emerald-600 text-white px-3 py-1.5 rounded text-xs disabled:opacity-60"
+                                  >
+                                    {approvingWithdrawalId === w.id ? "Approving..." : "Approve"}
+                                  </button>
+                                ) : (
+                                  <span className="text-xs text-slate-500">-</span>
+                                )}
+                              </td>
+                            </tr>
+
+                            {isPaymentOpen && edit && (
+                              <tr className="border-t bg-slate-50/60">
+                                <td colSpan={8} className="p-4">
+                                  <div className="bg-white border rounded p-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                      <div>
+                                        <div className="text-sm font-semibold">Payment Details</div>
+                                        <div className="text-xs text-slate-500">
+                                          Update bank/UPI before processing payment.
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => setExpandedPaymentUserId(null)}
+                                          className="border px-3 py-1.5 rounded text-xs"
+                                        >
+                                          Cancel
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => savePaymentDetails(userId)}
+                                          disabled={savingPaymentUserId === userId}
+                                          className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs disabled:opacity-60"
+                                        >
+                                          {savingPaymentUserId === userId ? "Saving..." : "Save"}
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                      <div>
+                                        <label className="block text-xs text-slate-600 mb-1">
+                                          UPI ID
+                                        </label>
+                                        <input
+                                          value={edit.upiId || ""}
+                                          onChange={(e) => updatePaymentEdit(userId, "upiId", e.target.value)}
+                                          className="w-full border rounded px-3 py-2 text-sm"
+                                          placeholder="yourid@bank"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs text-slate-600 mb-1">
+                                          UPI Mobile
+                                        </label>
+                                        <input
+                                          value={edit.upiNo || ""}
+                                          onChange={(e) => updatePaymentEdit(userId, "upiNo", e.target.value)}
+                                          className="w-full border rounded px-3 py-2 text-sm"
+                                          placeholder="UPI linked mobile number"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs text-slate-600 mb-1">
+                                          Account Holder
+                                        </label>
+                                        <input
+                                          value={edit.bankDetails?.accountHolder || ""}
+                                          onChange={(e) =>
+                                            updatePaymentEdit(
+                                              userId,
+                                              "bankDetails.accountHolder",
+                                              e.target.value
+                                            )
+                                          }
+                                          className="w-full border rounded px-3 py-2 text-sm"
+                                          placeholder="Account holder name"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs text-slate-600 mb-1">
+                                          Bank Name
+                                        </label>
+                                        <input
+                                          value={edit.bankDetails?.bankName || ""}
+                                          onChange={(e) =>
+                                            updatePaymentEdit(userId, "bankDetails.bankName", e.target.value)
+                                          }
+                                          className="w-full border rounded px-3 py-2 text-sm"
+                                          placeholder="Bank name"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs text-slate-600 mb-1">
+                                          Account No
+                                        </label>
+                                        <input
+                                          value={edit.bankDetails?.accountNo || ""}
+                                          onChange={(e) =>
+                                            updatePaymentEdit(userId, "bankDetails.accountNo", e.target.value)
+                                          }
+                                          className="w-full border rounded px-3 py-2 text-sm"
+                                          placeholder="Account number"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs text-slate-600 mb-1">
+                                          IFSC
+                                        </label>
+                                        <input
+                                          value={edit.bankDetails?.ifsc || ""}
+                                          onChange={(e) =>
+                                            updatePaymentEdit(userId, "bankDetails.ifsc", e.target.value)
+                                          }
+                                          className="w-full border rounded px-3 py-2 text-sm font-mono"
+                                          placeholder="SBIN0123456"
+                                        />
+                                      </div>
+                                      <div className="md:col-span-2">
+                                        <label className="block text-xs text-slate-600 mb-1">
+                                          Branch Name
+                                        </label>
+                                        <input
+                                          value={edit.bankDetails?.branchName || ""}
+                                          onChange={(e) =>
+                                            updatePaymentEdit(userId, "bankDetails.branchName", e.target.value)
+                                          }
+                                          className="w-full border rounded px-3 py-2 text-sm"
+                                          placeholder="Branch name"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
                         );
                       })}
                       {withdrawals.length === 0 && (

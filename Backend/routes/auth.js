@@ -31,6 +31,15 @@ function generateInviteCode(users) {
   return code;
 }
 
+function generateUserId(users) {
+  // More unique than Date.now() alone (avoids collisions if multiple users created quickly)
+  let id;
+  do {
+    id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  } while (users.some((u) => String(u.id) === id));
+  return id;
+}
+
 router.post('/register', async (req, res) => {
   try {
     const {
@@ -77,7 +86,7 @@ router.post('/register', async (req, res) => {
     const inviteCode = generateInviteCode(users);
 
     const newUser = {
-      id: Date.now().toString(),
+      id: generateUserId(users),
       name,
       email,
       password: hashed,
