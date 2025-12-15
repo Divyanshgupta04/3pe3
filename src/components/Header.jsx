@@ -10,8 +10,10 @@ export default function Header({
   setMobileOpen,
   scrollToId,
   NAV_ITEMS,
+  isAuthenticated,
   onLoginClick,
   onRegisterClick,
+  onLogoutClick,
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false); // local state only for sidebar
 
@@ -40,7 +42,7 @@ export default function Header({
           <div className="flex items-center gap-3">
             {/* 3-line button: opens sidebar */}
             <button
-              onClick={() => setSidebarOpen(true)}
+              onClick={() => setSidebarOpen((v) => !v)}
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-50"
             >
               <span className="sr-only">Open member menu</span>
@@ -56,35 +58,65 @@ export default function Header({
             </div>
           </div>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            {NAV_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => scrollToId(item.id)}
-                className={`transition ${
-                  activeSection === item.id
-                    ? "text-sky-600"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
+          {/* Right: desktop nav + auth buttons + mobile toggle */}
+          <div className="flex items-center gap-3">
+            {/* Desktop nav */}
+            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+              {NAV_ITEMS.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToId(item.id)}
+                  className={`transition ${
+                    activeSection === item.id
+                      ? "text-sky-600"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
 
-          {/* Mobile nav toggle */}
-          <button
-            className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm"
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            <span className="sr-only">Toggle navigation</span>
-            <div className="space-y-1">
-              <span className="block h-0.5 w-5 rounded bg-slate-900" />
-              <span className="block h-0.5 w-5 rounded bg-slate-900" />
-              <span className="block h-0.5 w-5 rounded bg-slate-900" />
+            {/* Desktop auth actions */}
+            <div className="hidden md:flex items-center gap-2">
+              {isAuthenticated ? (
+                <button
+                  onClick={onLogoutClick}
+                  className="rounded-full px-4 py-2 text-xs font-semibold border border-rose-300 text-rose-600 hover:bg-rose-50 transition"
+                >
+                  Logout
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={onRegisterClick}
+                    className="rounded-full px-4 py-2 text-xs font-semibold border border-sky-300 text-sky-700 hover:bg-sky-50 transition"
+                  >
+                    Register
+                  </button>
+                  <button
+                    onClick={onLoginClick}
+                    className="rounded-full px-4 py-2 text-xs font-semibold bg-sky-600 text-white hover:bg-sky-500 transition"
+                  >
+                    Login
+                  </button>
+                </>
+              )}
             </div>
-          </button>
+
+            {/* Mobile nav toggle */}
+            <button
+              className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm"
+              onClick={() => setMobileOpen(!mobileOpen)}
+            >
+              <span className="sr-only">Toggle navigation</span>
+              <div className="space-y-1">
+                <span className="block h-0.5 w-5 rounded bg-slate-900" />
+                <span className="block h-0.5 w-5 rounded bg-slate-900" />
+                <span className="block h-0.5 w-5 rounded bg-slate-900" />
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Mobile nav dropdown */}
@@ -104,6 +136,41 @@ export default function Header({
                   {item.label}
                 </button>
               ))}
+
+              <div className="pt-2 mt-2 border-t border-slate-200 flex items-center gap-2">
+                {isAuthenticated ? (
+                  <button
+                    onClick={() => {
+                      setMobileOpen(false);
+                      onLogoutClick && onLogoutClick();
+                    }}
+                    className="flex-1 rounded-full px-4 py-2 text-xs font-semibold border border-rose-300 text-rose-600 hover:bg-rose-50 transition"
+                  >
+                    Logout
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        setMobileOpen(false);
+                        onRegisterClick && onRegisterClick();
+                      }}
+                      className="flex-1 rounded-full px-4 py-2 text-xs font-semibold border border-sky-300 text-sky-700 hover:bg-sky-50 transition"
+                    >
+                      Register
+                    </button>
+                    <button
+                      onClick={() => {
+                        setMobileOpen(false);
+                        onLoginClick && onLoginClick();
+                      }}
+                      className="flex-1 rounded-full px-4 py-2 text-xs font-semibold bg-sky-600 text-white hover:bg-sky-500 transition"
+                    >
+                      Login
+                    </button>
+                  </>
+                )}
+              </div>
             </nav>
           </div>
         )}

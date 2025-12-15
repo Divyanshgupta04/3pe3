@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 import ActivateID from "./ActivateID";
 import TeamBusiness from "./MyTeamBusiness/TeamBusiness";
@@ -12,6 +13,8 @@ import Withdraw from "./Withdraw";
 import TransferPin from "./e-pin/TransferPin";
 import TransferToUser from "./e-pin/TransferToUser";
 import UsedPin from "./e-pin/UsedPin";
+import WelcomeLetter from "./WelcomeLetter";
+import CreateIdCard from "./CreateIdCard";
 
 const API_BASE = "http://localhost:5000";
 
@@ -70,6 +73,7 @@ export default function DashboardSidebar({
   onLoginClick,
   onRegisterClick,
 }) {
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false); // 🔑 ONLY NEW STATE
   const [openParent, setOpenParent] = useState(null);
   const [activePanel, setActivePanel] = useState(null);
@@ -77,6 +81,7 @@ export default function DashboardSidebar({
     typeof window !== "undefined" ? !!localStorage.getItem("token") : false
   );
   const [role, setRole] = useState(null);
+  const [profileUser, setProfileUser] = useState(null);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow || "";
@@ -92,17 +97,31 @@ export default function DashboardSidebar({
               headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
-            if (res.ok) setRole(data.user?.role || "member");
+            if (res.ok) {
+              setRole(data.user?.role || "member");
+              setProfileUser(data.user || null);
+            }
           } catch {}
         })();
       }
+
+      const onKeyDown = (e) => {
+        if (e.key === "Escape") onClose && onClose();
+      };
+      if (open) window.addEventListener("keydown", onKeyDown);
+
+      document.body.style.overflow = open ? "hidden" : previousOverflow;
+      return () => {
+        window.removeEventListener("keydown", onKeyDown);
+        document.body.style.overflow = previousOverflow;
+      };
     }
 
     document.body.style.overflow = open ? "hidden" : previousOverflow;
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [open]);
+  }, [open, onClose]);
 
   const handleParentClick = (label, hasChildren) => {
     if (collapsed) return;
@@ -120,6 +139,8 @@ export default function DashboardSidebar({
       if (childLabel === "KYC Upload") return setActivePanel("kyc-upload");
       if (childLabel === "Edit Bank Details")
         return setActivePanel("edit-bank-details");
+      if (childLabel === "Welcome Letter") return setActivePanel("welcome-letter");
+      if (childLabel === "Create ID Card") return setActivePanel("create-id-card");
     }
 
     if (parentLabel === "ePin") {
@@ -156,6 +177,33 @@ export default function DashboardSidebar({
     if (activePanel === "freedom-business") return <FreedomBusiness />;
     if (activePanel === "income-report") return <IncomeReport />;
 
+    if (activePanel === "welcome-letter") {
+      return (
+        <WelcomeLetter
+          embedded
+          userName={profileUser?.name || "Member"}
+          email={profileUser?.email || "user@example.com"}
+          inviteCode={profileUser?.inviteCode || "LS-INV-0000"}
+          onBack={() => setActivePanel(null)}
+          onCreateIdCard={() => setActivePanel("create-id-card")}
+          onContinue={() => setActivePanel(null)}
+        />
+      );
+    }
+
+    if (activePanel === "create-id-card") {
+      return (
+        <CreateIdCard
+          embedded
+          userName={profileUser?.name || "Member"}
+          email={profileUser?.email || "user@example.com"}
+          inviteCode={profileUser?.inviteCode || "LS-INV-0000"}
+          onBack={() => setActivePanel("welcome-letter")}
+          onContinue={() => setActivePanel(null)}
+        />
+      );
+    }
+
     return children || null;
   };
 
@@ -168,6 +216,14 @@ export default function DashboardSidebar({
 
   return (
     <>
+      {/* Backdrop: click to close */}
+      <button
+        type="button"
+        aria-label="Close sidebar"
+        className="fixed inset-0 z-30 bg-black/40"
+        onClick={() => onClose && onClose()}
+      />
+
       {/* Sidebar */}
       <aside
         className={`
@@ -181,17 +237,41 @@ export default function DashboardSidebar({
         {/* Header */}
         <div className="flex items-center justify-between px-4 h-16 border-b border-slate-800">
           {!collapsed && (
-            <span className="text-sm font-semibold uppercase">Member Menu</span>
+            <button
+              type="button"
+              onClick={() => {
+                setActivePanel(null);
+                onClose && onClose();
+                navigate("/");
+              }}
+              className="text-sm font-semibold uppercase hover:text-slate-200"
+              title="Go to Home"
+            >
+              Home
+            </button>
           )}
 
-          {/* ARROW BUTTON (REPLACES ❌) */}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-slate-800 text-xl"
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {collapsed ? "›" : "‹"}
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Collapse */}
+            <button
+              type="button"
+              onClick={() => setCollapsed(!collapsed)}
+              className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-slate-800 text-xl"
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {collapsed ? "›" : "‹"}
+            </button>
+
+            {/* Close */}
+            <button
+              type="button"
+              onClick={() => onClose && onClose()}
+              className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-slate-800 text-lg"
+              title="Close sidebar"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* NAV */}

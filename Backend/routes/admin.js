@@ -10,6 +10,9 @@ const EPINS_PATH = path.join(__dirname, '..', 'data', 'epins.json');
 const EPIN_TRANSFERS_PATH = path.join(__dirname, '..', 'data', 'epinTransfers.json');
 const KYC_PATH = path.join(__dirname, '..', 'data', 'kyc.json');
 const WITHDRAWALS_PATH = path.join(__dirname, '..', 'data', 'withdrawals.json');
+const PROJECTS_PATH = path.join(__dirname, '..', 'data', 'projects.json');
+const TEAM_MEMBERS_PATH = path.join(__dirname, '..', 'data', 'teamMembers.json');
+const TESTIMONIALS_PATH = path.join(__dirname, '..', 'data', 'testimonials.json');
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_jwt_key_change_me';
 
 function loadUsers() {
@@ -54,6 +57,72 @@ function ensureWithdrawalsFile() {
   if (!fs.existsSync(WITHDRAWALS_PATH)) {
     saveWithdrawals([]);
   }
+}
+
+function ensureProjectsFile() {
+  if (!fs.existsSync(PROJECTS_PATH)) {
+    fs.writeFileSync(PROJECTS_PATH, JSON.stringify([], null, 2));
+  }
+}
+
+function loadProjects() {
+  ensureProjectsFile();
+  const raw = fs.readFileSync(PROJECTS_PATH, 'utf-8');
+  try {
+    const arr = JSON.parse(raw || '[]');
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveProjects(projects) {
+  ensureProjectsFile();
+  fs.writeFileSync(PROJECTS_PATH, JSON.stringify(projects, null, 2));
+}
+
+function ensureTeamMembersFile() {
+  if (!fs.existsSync(TEAM_MEMBERS_PATH)) {
+    fs.writeFileSync(TEAM_MEMBERS_PATH, JSON.stringify([], null, 2));
+  }
+}
+
+function loadTeamMembers() {
+  ensureTeamMembersFile();
+  const raw = fs.readFileSync(TEAM_MEMBERS_PATH, 'utf-8');
+  try {
+    const arr = JSON.parse(raw || '[]');
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveTeamMembers(items) {
+  ensureTeamMembersFile();
+  fs.writeFileSync(TEAM_MEMBERS_PATH, JSON.stringify(items, null, 2));
+}
+
+function ensureTestimonialsFile() {
+  if (!fs.existsSync(TESTIMONIALS_PATH)) {
+    fs.writeFileSync(TESTIMONIALS_PATH, JSON.stringify([], null, 2));
+  }
+}
+
+function loadTestimonials() {
+  ensureTestimonialsFile();
+  const raw = fs.readFileSync(TESTIMONIALS_PATH, 'utf-8');
+  try {
+    const arr = JSON.parse(raw || '[]');
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveTestimonials(items) {
+  ensureTestimonialsFile();
+  fs.writeFileSync(TESTIMONIALS_PATH, JSON.stringify(items, null, 2));
 }
 
 function loadEpins() {
@@ -174,6 +243,20 @@ router.post('/users', adminAuth, (req, res) => {
     return res.status(409).json({ message: 'Email already registered' });
   }
 
+  const normalizePhone = (v) => {
+    const digits = String(v || '').replace(/\D/g, '');
+    if (!digits) return '';
+    return digits.length > 10 ? digits.slice(-10) : digits;
+  };
+
+  const normalizedPhone = normalizePhone(phone);
+  if (normalizedPhone) {
+    const existingPhone = users.find((u) => normalizePhone(u.phone) === normalizedPhone);
+    if (existingPhone) {
+      return res.status(409).json({ message: 'Phone number already registered' });
+    }
+  }
+
   const inviteCode = generateInviteCode(users);
 
   const newUser = {
@@ -183,7 +266,7 @@ router.post('/users', adminAuth, (req, res) => {
     // NOTE: For parity with the current codebase (file-backed), keep password as plain text here.
     // If you want this to be secure, we should switch this endpoint to bcrypt hashing like /api/auth/register.
     password,
-    phone: phone || '',
+    phone: normalizedPhone || (phone || ''),
     address: address || '',
     sponsorId: sponsorId || 'WSE-COMPANY',
     sponsorName: sponsorName || 'WSE Company',
@@ -444,6 +527,97 @@ router.get('/stats', adminAuth, (req, res) => {
   const activeMembers = Array.isArray(users) ? users.length : 0;
 
   res.json({ siteName, activeMembers });
+});
+
+// Projects management for admin panel
+router.get('/projects', adminAuth, (req, res) => {
+  const projects = loadProjects();
+  return res.json({ projects });
+});
+
+router.post('/projects', adminAuth, (req, res) => {
+  const { title, desc, imageUrl, href } = req.body || {};
+
+  if (!title || !desc) {
+    return res.status(400).json({ message: 'title and desc are required' });
+  }
+
+  const projects = loadProjects();
+  const now = new Date().toISOString();
+
+  const project = {
+    id: `PRJ-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    title: String(title).trim(),
+    desc: String(desc).trim(),
+    imageUrl: imageUrl ? String(imageUrl).trim() : '',
+    href: href ? String(href).trim() : '',
+    createdAt: now,
+  };
+
+  projects.unshift(project);
+  saveProjects(projects);
+
+  return res.status(201).json({ project });
+});
+
+// Site content management: Team Members
+router.get('/site/team-members', adminAuth, (req, res) => {
+  const teamMembers = loadTeamMembers();
+  return res.json({ teamMembers });
+});
+
+router.post('/site/team-members', adminAuth, (req, res) => {
+  const { name, role, imageUrl } = req.body || {};
+
+  if (!name || !role) {
+    return res.status(400).json({ message: 'name and role are required' });
+  }
+
+  const items = loadTeamMembers();
+  const now = new Date().toISOString();
+
+  const member = {
+    id: `TEAM-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name: String(name).trim(),
+    role: String(role).trim(),
+    imageUrl: imageUrl ? String(imageUrl).trim() : '',
+    createdAt: now,
+  };
+
+  items.unshift(member);
+  saveTeamMembers(items);
+
+  return res.status(201).json({ member });
+});
+
+// Site content management: Testimonials
+router.get('/site/testimonials', adminAuth, (req, res) => {
+  const testimonials = loadTestimonials();
+  return res.json({ testimonials });
+});
+
+router.post('/site/testimonials', adminAuth, (req, res) => {
+  const { text, name, role } = req.body || {};
+
+  if (!text || !name || !role) {
+    return res.status(400).json({ message: 'text, name and role are required' });
+  }
+
+  const items = loadTestimonials();
+  const now = new Date().toISOString();
+
+  const testimonial = {
+    id: `TST-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    text: String(text).trim(),
+    name: String(name).trim(),
+    role: String(role).trim(),
+    createdAt: now,
+  };
+
+  items.unshift(testimonial);
+  saveTestimonials(items);
+
+  return res.status(201).json({ testimonial });
 });
 
 // E-Pin management for admin panel (central pool of pins)

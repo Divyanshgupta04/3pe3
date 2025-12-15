@@ -123,6 +123,9 @@ export default function AdminPage() {
   const [epins, setEpins] = useState([]);
   const [kycs, setKycs] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [siteTeamMembers, setSiteTeamMembers] = useState([]);
+  const [siteTestimonials, setSiteTestimonials] = useState([]);
 
   // ui
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -141,6 +144,12 @@ export default function AdminPage() {
   const [loadingKycs, setLoadingKycs] = useState(false);
   const [loadingWithdrawals, setLoadingWithdrawals] = useState(false);
   const [approvingWithdrawalId, setApprovingWithdrawalId] = useState(null);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [creatingProject, setCreatingProject] = useState(false);
+  const [loadingSiteTeamMembers, setLoadingSiteTeamMembers] = useState(false);
+  const [creatingSiteTeamMember, setCreatingSiteTeamMember] = useState(false);
+  const [loadingSiteTestimonials, setLoadingSiteTestimonials] = useState(false);
+  const [creatingSiteTestimonial, setCreatingSiteTestimonial] = useState(false);
 
   // admin: create member
   const [creatingMember, setCreatingMember] = useState(false);
@@ -151,6 +160,26 @@ export default function AdminPage() {
     phone: "",
     sponsorId: "",
     sponsorName: "",
+  });
+
+  // admin: create project
+  const [newProject, setNewProject] = useState({
+    title: "",
+    desc: "",
+    imageUrl: "",
+    href: "",
+  });
+
+  const [newSiteTeamMember, setNewSiteTeamMember] = useState({
+    name: "",
+    role: "",
+    imageUrl: "",
+  });
+
+  const [newSiteTestimonial, setNewSiteTestimonial] = useState({
+    text: "",
+    name: "",
+    role: "",
   });
 
   // admin: transfer epins
@@ -432,6 +461,161 @@ export default function AdminPage() {
     }
   }
 
+  async function fetchProjects(token) {
+    if (!token) return;
+    setLoadingProjects(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/admin/projects`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to fetch projects");
+      setProjects(Array.isArray(data.projects) ? data.projects : []);
+    } catch (err) {
+      setError(err.message || "Failed to fetch projects");
+    } finally {
+      setLoadingProjects(false);
+    }
+  }
+
+  async function createProject() {
+    if (!adminToken) return;
+    if (!newProject.title || !newProject.desc) {
+      setError("Project title and description are required");
+      return;
+    }
+
+    setCreatingProject(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/admin/projects`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify(newProject),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to create project");
+
+      if (data.project) {
+        setProjects((prev) => [data.project, ...prev]);
+      } else {
+        fetchProjects(adminToken);
+      }
+
+      setNewProject({ title: "", desc: "", imageUrl: "", href: "" });
+    } catch (err) {
+      setError(err.message || "Failed to create project");
+    } finally {
+      setCreatingProject(false);
+    }
+  }
+
+  async function fetchSiteTeamMembers(token) {
+    if (!token) return;
+    setLoadingSiteTeamMembers(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/admin/site/team-members`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to fetch team members");
+      setSiteTeamMembers(Array.isArray(data.teamMembers) ? data.teamMembers : []);
+    } catch (err) {
+      setError(err.message || "Failed to fetch team members");
+    } finally {
+      setLoadingSiteTeamMembers(false);
+    }
+  }
+
+  async function createSiteTeamMember() {
+    if (!adminToken) return;
+    if (!newSiteTeamMember.name || !newSiteTeamMember.role) {
+      setError("Team member name and role are required");
+      return;
+    }
+
+    setCreatingSiteTeamMember(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/admin/site/team-members`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify(newSiteTeamMember),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to create team member");
+      if (data.member) {
+        setSiteTeamMembers((prev) => [data.member, ...prev]);
+      } else {
+        fetchSiteTeamMembers(adminToken);
+      }
+      setNewSiteTeamMember({ name: "", role: "", imageUrl: "" });
+    } catch (err) {
+      setError(err.message || "Failed to create team member");
+    } finally {
+      setCreatingSiteTeamMember(false);
+    }
+  }
+
+  async function fetchSiteTestimonials(token) {
+    if (!token) return;
+    setLoadingSiteTestimonials(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/admin/site/testimonials`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to fetch testimonials");
+      setSiteTestimonials(Array.isArray(data.testimonials) ? data.testimonials : []);
+    } catch (err) {
+      setError(err.message || "Failed to fetch testimonials");
+    } finally {
+      setLoadingSiteTestimonials(false);
+    }
+  }
+
+  async function createSiteTestimonial() {
+    if (!adminToken) return;
+    if (!newSiteTestimonial.text || !newSiteTestimonial.name || !newSiteTestimonial.role) {
+      setError("Testimonial text, name and role are required");
+      return;
+    }
+
+    setCreatingSiteTestimonial(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/admin/site/testimonials`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify(newSiteTestimonial),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to create testimonial");
+      if (data.testimonial) {
+        setSiteTestimonials((prev) => [data.testimonial, ...prev]);
+      } else {
+        fetchSiteTestimonials(adminToken);
+      }
+      setNewSiteTestimonial({ text: "", name: "", role: "" });
+    } catch (err) {
+      setError(err.message || "Failed to create testimonial");
+    } finally {
+      setCreatingSiteTestimonial(false);
+    }
+  }
+
   async function approveWithdrawal(withdrawalId) {
     if (!adminToken) return;
     setApprovingWithdrawalId(withdrawalId);
@@ -594,6 +778,15 @@ export default function AdminPage() {
     if (page === "withdrawals" && withdrawals.length === 0 && adminToken) {
       fetchWithdrawals(adminToken);
     }
+    if (page === "projects" && projects.length === 0 && adminToken) {
+      fetchProjects(adminToken);
+    }
+    if (page === "siteTeam" && siteTeamMembers.length === 0 && adminToken) {
+      fetchSiteTeamMembers(adminToken);
+    }
+    if (page === "testimonials" && siteTestimonials.length === 0 && adminToken) {
+      fetchSiteTestimonials(adminToken);
+    }
   }
 
   /* -------------------- Render -------------------- */
@@ -647,6 +840,9 @@ export default function AdminPage() {
           <SidebarButton label="Bank Details" active={currentPage === "bank"} icon={<IconBank />} onClick={() => openPage("bank")} />
           <SidebarButton label="KYC" active={currentPage === "kyc"} icon={<IconFile />} onClick={() => openPage("kyc")} />
           <SidebarButton label="Withdrawals" active={currentPage === "withdrawals"} icon={<IconDollar />} onClick={() => openPage("withdrawals")} />
+          <SidebarButton label="Projects" active={currentPage === "projects"} icon={<IconFile />} onClick={() => openPage("projects")} />
+          <SidebarButton label="Site Team" active={currentPage === "siteTeam"} icon={<IconUsers />} onClick={() => openPage("siteTeam")} />
+          <SidebarButton label="Testimonials" active={currentPage === "testimonials"} icon={<IconFile />} onClick={() => openPage("testimonials")} />
           <SidebarButton label="E-Pin" active={currentPage === "epin"} icon={<IconKey />} onClick={() => openPage("epin")} />
           <SidebarButton label="Income" active={currentPage === "income"} icon={<IconDollar />} onClick={() => openPage("income")} />
         </nav>
@@ -1303,6 +1499,275 @@ export default function AdminPage() {
                       {withdrawals.length === 0 && (
                         <tr>
                           <td colSpan={8} className="p-6 text-center text-slate-500">No withdrawal requests.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Site Team page */}
+          {currentPage === "siteTeam" && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold">Site Team Members</h2>
+                <button onClick={() => fetchSiteTeamMembers(adminToken)} className="border px-4 py-2 rounded">
+                  Refresh
+                </button>
+              </div>
+
+              <div className="mb-4 border rounded p-3 bg-slate-50">
+                <div className="text-sm font-semibold mb-2">Add Team Member</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <input
+                    value={newSiteTeamMember.name}
+                    onChange={(e) => setNewSiteTeamMember((s) => ({ ...s, name: e.target.value }))}
+                    className="border rounded px-3 py-2 text-sm"
+                    placeholder="Name"
+                  />
+                  <input
+                    value={newSiteTeamMember.role}
+                    onChange={(e) => setNewSiteTeamMember((s) => ({ ...s, role: e.target.value }))}
+                    className="border rounded px-3 py-2 text-sm"
+                    placeholder="Role / Description"
+                  />
+                  <input
+                    value={newSiteTeamMember.imageUrl}
+                    onChange={(e) => setNewSiteTeamMember((s) => ({ ...s, imageUrl: e.target.value }))}
+                    className="border rounded px-3 py-2 text-sm md:col-span-2"
+                    placeholder="Image URL (optional)"
+                  />
+                </div>
+                <div className="mt-2 flex justify-end">
+                  <button
+                    onClick={createSiteTeamMember}
+                    disabled={creatingSiteTeamMember}
+                    className="bg-blue-600 text-white px-4 py-2 rounded text-sm disabled:opacity-60"
+                  >
+                    {creatingSiteTeamMember ? "Creating..." : "Add Member"}
+                  </button>
+                </div>
+              </div>
+
+              {loadingSiteTeamMembers ? (
+                <div className="text-sm text-slate-500">Loading team members...</div>
+              ) : (
+                <div className="overflow-auto max-h-[60vh] border rounded">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-slate-50 sticky top-0">
+                      <tr>
+                        <th className="p-3 text-left">Name</th>
+                        <th className="p-3 text-left">Role</th>
+                        <th className="p-3 text-left">Image</th>
+                        <th className="p-3 text-left">Created</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {siteTeamMembers.map((m) => (
+                        <tr key={m.id} className="border-t hover:bg-slate-50">
+                          <td className="p-3 font-medium">{m.name}</td>
+                          <td className="p-3 text-xs text-slate-700">{m.role}</td>
+                          <td className="p-3 text-xs">
+                            {m.imageUrl ? (
+                              <a href={m.imageUrl} target="_blank" rel="noreferrer" className="text-blue-700 underline">
+                                open
+                              </a>
+                            ) : (
+                              <span className="text-slate-400">-</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-xs text-slate-500">
+                            {m.createdAt ? String(m.createdAt).slice(0, 19).replace("T", " ") : "-"}
+                          </td>
+                        </tr>
+                      ))}
+                      {siteTeamMembers.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="p-6 text-center text-slate-500">
+                            No team members found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Testimonials page */}
+          {currentPage === "testimonials" && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold">Testimonials</h2>
+                <button onClick={() => fetchSiteTestimonials(adminToken)} className="border px-4 py-2 rounded">
+                  Refresh
+                </button>
+              </div>
+
+              <div className="mb-4 border rounded p-3 bg-slate-50">
+                <div className="text-sm font-semibold mb-2">Add Testimonial</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <input
+                    value={newSiteTestimonial.name}
+                    onChange={(e) => setNewSiteTestimonial((s) => ({ ...s, name: e.target.value }))}
+                    className="border rounded px-3 py-2 text-sm"
+                    placeholder="Name"
+                  />
+                  <input
+                    value={newSiteTestimonial.role}
+                    onChange={(e) => setNewSiteTestimonial((s) => ({ ...s, role: e.target.value }))}
+                    className="border rounded px-3 py-2 text-sm"
+                    placeholder="Role (e.g. Distributor)"
+                  />
+                  <textarea
+                    value={newSiteTestimonial.text}
+                    onChange={(e) => setNewSiteTestimonial((s) => ({ ...s, text: e.target.value }))}
+                    className="border rounded px-3 py-2 text-sm md:col-span-2"
+                    placeholder="Testimonial text"
+                    rows={3}
+                  />
+                </div>
+                <div className="mt-2 flex justify-end">
+                  <button
+                    onClick={createSiteTestimonial}
+                    disabled={creatingSiteTestimonial}
+                    className="bg-blue-600 text-white px-4 py-2 rounded text-sm disabled:opacity-60"
+                  >
+                    {creatingSiteTestimonial ? "Creating..." : "Add Testimonial"}
+                  </button>
+                </div>
+              </div>
+
+              {loadingSiteTestimonials ? (
+                <div className="text-sm text-slate-500">Loading testimonials...</div>
+              ) : (
+                <div className="overflow-auto max-h-[60vh] border rounded">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-slate-50 sticky top-0">
+                      <tr>
+                        <th className="p-3 text-left">Name</th>
+                        <th className="p-3 text-left">Role</th>
+                        <th className="p-3 text-left">Text</th>
+                        <th className="p-3 text-left">Created</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {siteTestimonials.map((t) => (
+                        <tr key={t.id} className="border-t hover:bg-slate-50">
+                          <td className="p-3 font-medium">{t.name}</td>
+                          <td className="p-3 text-xs text-slate-700">{t.role}</td>
+                          <td className="p-3 text-xs text-slate-700">{t.text}</td>
+                          <td className="p-3 text-xs text-slate-500">
+                            {t.createdAt ? String(t.createdAt).slice(0, 19).replace("T", " ") : "-"}
+                          </td>
+                        </tr>
+                      ))}
+                      {siteTestimonials.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="p-6 text-center text-slate-500">
+                            No testimonials found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Projects page */}
+          {currentPage === "projects" && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold">Projects</h2>
+                <div className="flex gap-2">
+                  <button onClick={() => fetchProjects(adminToken)} className="border px-4 py-2 rounded">
+                    Refresh
+                  </button>
+                </div>
+              </div>
+
+              <div className="mb-4 border rounded p-3 bg-slate-50">
+                <div className="text-sm font-semibold mb-2">Add New Project</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <input
+                    value={newProject.title}
+                    onChange={(e) => setNewProject((s) => ({ ...s, title: e.target.value }))}
+                    className="border rounded px-3 py-2 text-sm"
+                    placeholder="Title"
+                  />
+                  <input
+                    value={newProject.href}
+                    onChange={(e) => setNewProject((s) => ({ ...s, href: e.target.value }))}
+                    className="border rounded px-3 py-2 text-sm"
+                    placeholder="Link (optional)"
+                  />
+                  <input
+                    value={newProject.imageUrl}
+                    onChange={(e) => setNewProject((s) => ({ ...s, imageUrl: e.target.value }))}
+                    className="border rounded px-3 py-2 text-sm md:col-span-2"
+                    placeholder="Image URL (optional)"
+                  />
+                  <textarea
+                    value={newProject.desc}
+                    onChange={(e) => setNewProject((s) => ({ ...s, desc: e.target.value }))}
+                    className="border rounded px-3 py-2 text-sm md:col-span-2"
+                    placeholder="Description"
+                    rows={3}
+                  />
+                </div>
+                <div className="mt-2 flex justify-end">
+                  <button
+                    onClick={createProject}
+                    disabled={creatingProject}
+                    className="bg-blue-600 text-white px-4 py-2 rounded text-sm disabled:opacity-60"
+                  >
+                    {creatingProject ? "Creating..." : "Create Project"}
+                  </button>
+                </div>
+              </div>
+
+              {loadingProjects ? (
+                <div className="text-sm text-slate-500">Loading projects...</div>
+              ) : (
+                <div className="overflow-auto max-h-[60vh] border rounded">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-slate-50 sticky top-0">
+                      <tr>
+                        <th className="p-3 text-left">Title</th>
+                        <th className="p-3 text-left">Description</th>
+                        <th className="p-3 text-left">Link</th>
+                        <th className="p-3 text-left">Created</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {projects.map((p) => (
+                        <tr key={p.id} className="border-t hover:bg-slate-50">
+                          <td className="p-3 font-medium">{p.title}</td>
+                          <td className="p-3 text-xs text-slate-700">{p.desc}</td>
+                          <td className="p-3">
+                            {p.href ? (
+                              <a href={p.href} target="_blank" rel="noreferrer" className="text-blue-700 underline">
+                                open
+                              </a>
+                            ) : (
+                              <span className="text-xs text-slate-400">-</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-xs text-slate-500">
+                            {p.createdAt ? String(p.createdAt).slice(0, 19).replace("T", " ") : "-"}
+                          </td>
+                        </tr>
+                      ))}
+                      {projects.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="p-6 text-center text-slate-500">
+                            No projects found.
+                          </td>
                         </tr>
                       )}
                     </tbody>

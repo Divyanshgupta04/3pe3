@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+
+const API_BASE = "http://localhost:5000";
 import {
   FiMail,
   FiLock,
@@ -16,6 +18,8 @@ import {
 export default function OfficialRegisterPage({ onSubmit, onGoToLogin, onGoHome }) {
   const [sponsorId, setSponsorId] = useState("");
   const [sponsorName, setSponsorName] = useState("");
+  const [sponsorLoading, setSponsorLoading] = useState(false);
+  const [sponsorError, setSponsorError] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -25,11 +29,44 @@ export default function OfficialRegisterPage({ onSubmit, onGoToLogin, onGoHome }
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const code = sponsorId.trim();
+
+    // reset while typing
+    setSponsorError("");
+    if (!code) {
+      setSponsorName("");
+      setSponsorLoading(false);
+      return;
+    }
+
+    const t = setTimeout(async () => {
+      try {
+        setSponsorLoading(true);
+        const res = await fetch(`${API_BASE}/api/auth/sponsor/${encodeURIComponent(code)}`);
+        const data = await res.json();
+        if (!res.ok) {
+          setSponsorName("");
+          setSponsorError(data.message || "Invalid invite code");
+          return;
+        }
+        setSponsorName(data?.sponsor?.name || "");
+      } catch {
+        setSponsorName("");
+        setSponsorError("Failed to verify invite code");
+      } finally {
+        setSponsorLoading(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(t);
+  }, [sponsorId]);
+
   function validate() {
     const e = {};
 
     if (!sponsorId.trim()) e.sponsorId = "Invite code is required.";
-    if (!sponsorName.trim()) e.sponsorName = "Sponsor name is required.";
+    else if (!sponsorName.trim()) e.sponsorId = sponsorError || "Invalid invite code";
 
     if (!name.trim()) e.name = "Name is required.";
 
@@ -169,7 +206,11 @@ export default function OfficialRegisterPage({ onSubmit, onGoToLogin, onGoHome }
                   <input
                     type="text"
                     value={sponsorId}
-                    onChange={(e) => setSponsorId(e.target.value)}
+                    onChange={(e) => {
+                      setSponsorId(e.target.value);
+                      // clear old sponsor name until verified
+                      setSponsorName("");
+                    }}
                     className={`w-full rounded-xl border bg-slate-900/60 px-3.5 py-2.5 pr-10 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition ${
                       errors.sponsorId
                         ? "border-red-400/70"
@@ -186,31 +227,32 @@ export default function OfficialRegisterPage({ onSubmit, onGoToLogin, onGoHome }
                 )}
               </label>
 
-              {/* Sponsor Name */}
+              {/* Sponsor Name (auto) */}
               <label className="block">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-medium tracking-wide text-slate-200">
                     Sponsor name
                   </span>
+                  {sponsorLoading ? (
+                    <span className="text-[10px] text-slate-500">verifying...</span>
+                  ) : null}
                 </div>
                 <div className="relative">
                   <input
                     type="text"
                     value={sponsorName}
-                    onChange={(e) => setSponsorName(e.target.value)}
+                    readOnly
                     className={`w-full rounded-xl border bg-slate-900/60 px-3.5 py-2.5 pr-10 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition ${
-                      errors.sponsorName
+                      errors.sponsorId
                         ? "border-red-400/70"
                         : "border-slate-700"
                     }`}
-                    placeholder="Sponsor's full name"
+                    placeholder="Auto from invite code"
                   />
                   <FiUser className="w-4 h-4 absolute right-3.5 top-3 text-slate-500" />
                 </div>
-                {errors.sponsorName && (
-                  <p className="text-[11px] text-red-400 mt-1">
-                    {errors.sponsorName}
-                  </p>
+                {sponsorError && (
+                  <p className="text-[11px] text-red-400 mt-1">{sponsorError}</p>
                 )}
               </label>
 

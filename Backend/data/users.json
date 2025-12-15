@@ -91,8 +91,8 @@
     "isActivated": true,
     "activationPackage": "Basic",
     "activatedAt": "2025-12-11T16:55:06.338Z",
-    "balance": 50,
-    "totalIncome": 50,
+    "balance": 56,
+    "totalIncome": 56,
     "withdrawal": 0,
     "freedomIncome": 0,
     "dailyBonusIncome": 50,
@@ -101,7 +101,8 @@
     "createdAt": "2025-12-10T14:13:55.984Z",
     "directInviteIds": [
       "1765473535824",
-      "1765474208899"
+      "1765474208899",
+      "1765772384720-99hzxk"
     ]
   },
   {
@@ -154,5 +155,48 @@
     "roleAssignedAt": "2025-12-14T07:51:56.491Z",
     "upiId": "hdjhwd wdjwhj h",
     "upiNo": "9621549873"
+  },
+  {
+    "id": "1765772384720-99hzxk",
+    "name": "pratik chaubey",
+    "email": "chatprati@gmail.com",
+    "password": "$2b$10$saH/d1NIKR0qO0pGc98RtO.4yu/0FQ.ekWIkdTIVlu.6qDuaLoJGO",
+    "phone": "9621549874",
+    "address": "govidpur kirat\ngovidpur kirat",
+    "sponsorId": "LS397670",
+    "sponsorName": "test-5",
+    "inviteCode": "LS317522",
+    "role": "member",
+    "roleAssignedBy": null,
+    "roleAssignedAt": null,
+    "isActivated": false,
+    "activationPackage": null,
+    "activatedAt": null,
+    "balance": 0,
+    "totalIncome": 0,
+    "withdrawal": 0,
+    "freedomIncome": 0,
+    "dailyBonusIncome": 0,
+    "rankRewardIncome": 0,
+    "lastDailyCredit": "2025-12-15",
+    "createdAt": "2025-12-15T04:19:44.720Z",
+    "gender": "",
+    "city": "",
+    "state": "",
+    "pinCode": "",
+    "age": "",
+    "panNo": "",
+    "aadhaarNo": "",
+    "nomineeName": "",
+    "nomineeRelation": "",
+    "upiNo": "",
+    "upiId": "",
+    "bankDetails": {
+      "accountHolder": "",
+      "bankName": "",
+      "accountNo": "",
+      "ifsc": "",
+      "branchName": ""
+    }
   }
 ]

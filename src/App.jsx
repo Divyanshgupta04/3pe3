@@ -41,6 +41,12 @@ export default function App() {
   );
   const [welcomeData, setWelcomeData] = useState(null);
 
+  function handleLogout() {
+    localStorage.removeItem("token");
+    setIsAuthenticated(false);
+    setAuthView(null);
+  }
+
   async function handleRegisterSubmit(payload) {
     const res = await fetch("http://localhost:5000/api/auth/register", {
       method: "POST",
@@ -209,8 +215,10 @@ export default function App() {
         setMobileOpen={setMobileOpen}
         scrollToId={scrollToId}
         NAV_ITEMS={NAV_ITEMS}
+        isAuthenticated={isAuthenticated}
         onLoginClick={() => setAuthView("login")}
         onRegisterClick={() => setAuthView("register")}
+        onLogoutClick={handleLogout}
       />
 
       <HeroSection scrollToId={scrollToId} />
@@ -223,10 +231,11 @@ export default function App() {
       <TestimonialsSection />
       <FAQSection />
       <FooterSection
+        isAuthenticated={isAuthenticated}
         onLoginClick={() => setAuthView("login")}
         onRegisterClick={() => setAuthView("register")}
+        onLogoutClick={handleLogout}
       />
-      {isAuthenticated && <MemberLayout />}
     </div>
   );
 }

@@ -94,7 +94,7 @@ const HeroSection = ({ scrollToId }) => {
             </p>
             <p className="text-sm text-slate-800 mb-3">
               हमारा लक्ष्य है कि{" "}
-              <span className="font-semibold">WORLD SHOPEE ENTERPRISES</span>{" "}
+              <span className="font-semibold">LIFE SPARK ASSOCIATES</span>{" "}
               हर भारतीय परिवार के लिए भरोसेमंद नाम बने — गुणवत्ता, नवाचार और
               सही अवसरों के साथ।
             </p>

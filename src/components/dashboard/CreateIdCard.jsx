@@ -1,6 +1,8 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { FiArrowLeft, FiPrinter, FiArrowRight } from "react-icons/fi";
+
+const API_BASE = "http://localhost:5000";
 
 const MotionDiv = motion.div;
 
@@ -16,10 +18,37 @@ export default function CreateIdCard({
   userName = "Member",
   email = "user@example.com",
   inviteCode = "LS-INV-0000",
+  embedded = false,
   onBack,
   onContinue,
 }) {
-  const memberId = useMemo(() => makeMemberId(inviteCode), [inviteCode]);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.user) setProfile(data.user);
+      } catch {
+        // ignore
+      }
+    })();
+  }, []);
+
+  const effectiveName = profile?.name || userName;
+  const effectiveEmail = profile?.email || email;
+  const effectiveInviteCode = profile?.inviteCode || inviteCode;
+
+  const memberId = useMemo(
+    () => makeMemberId(profile?.id || effectiveInviteCode),
+    [profile?.id, effectiveInviteCode]
+  );
   const issuedOn = useMemo(() => new Date().toLocaleDateString(), []);
 
   const handlePrint = () => {
@@ -27,7 +56,13 @@ export default function CreateIdCard({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
+    <div
+      className={
+        embedded
+          ? "w-full flex justify-center py-6"
+          : "min-h-screen bg-slate-950 flex items-center justify-center px-4"
+      }
+    >
       {/* print helpers */}
       <style>{`
         @media print {
@@ -38,10 +73,12 @@ export default function CreateIdCard({
       `}</style>
 
       {/* background glow */}
-      <div className="absolute inset-0 -z-10 no-print">
-        <div className="absolute -top-32 -left-32 h-80 w-80 bg-indigo-500/40 blur-3xl rounded-full" />
-        <div className="absolute -bottom-32 -right-32 h-80 w-80 bg-violet-500/40 blur-3xl rounded-full" />
-      </div>
+      {!embedded && (
+        <div className="absolute inset-0 -z-10 no-print">
+          <div className="absolute -top-32 -left-32 h-80 w-80 bg-indigo-500/40 blur-3xl rounded-full" />
+          <div className="absolute -bottom-32 -right-32 h-80 w-80 bg-violet-500/40 blur-3xl rounded-full" />
+        </div>
+      )}
 
       <MotionDiv
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -86,17 +123,17 @@ export default function CreateIdCard({
 
             <div className="mt-5">
               <p className="text-[11px] text-slate-400">Name</p>
-              <p className="text-lg font-semibold text-white">{userName}</p>
+              <p className="text-lg font-semibold text-white">{effectiveName}</p>
             </div>
 
             <div className="mt-3">
               <p className="text-[11px] text-slate-400">Email</p>
-              <p className="text-sm text-slate-200 break-all">{email}</p>
+              <p className="text-sm text-slate-200 break-all">{effectiveEmail}</p>
             </div>
 
             <div className="mt-3">
               <p className="text-[11px] text-slate-400">Invite Code</p>
-              <p className="text-sm font-medium text-indigo-300">{inviteCode}</p>
+              <p className="text-sm font-medium text-indigo-300">{effectiveInviteCode}</p>
             </div>
 
             <div className="mt-5 flex items-center justify-between">
