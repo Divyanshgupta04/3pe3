@@ -10,7 +10,7 @@ const API_BASE = config.apiUrl;
 const fallbackTestimonials = [
   {
     id: "TST-fallback-1",
-    text: "World Shopee Enterprises helped me turn small efforts into a meaningful side income.",
+    text: " Life Spark Associate helped me turn small efforts into a meaningful side income.",
     name: "Person Name",
     role: "Distributor",
   },

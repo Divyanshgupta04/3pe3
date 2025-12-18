@@ -22,14 +22,17 @@ const MissionVisionSection = () => {
             Empowering people through digital education & business.
           </h3>
           <p className="text-sm text-slate-700 mb-3">
-            WORLD SHOPEE ENTERPRISES का मिशन है कि आम लोगों को डिजिटल दुनिया का
-            ज्ञान, सही ट्रेनिंग और मजबूत बिज़नेस मॉडल के साथ जोड़ा जाए ताकि वे
-            अपनी शर्तों पर जीवन जी सकें।
+            The mission of Life Spark Associates is to empower everyday people
+            with digital knowledge, proper training, and a strong business
+            model, enabling them to live life on their own terms.
           </p>
+
           <p className="text-sm text-slate-700 mb-4">
-            हम ऐसा हाइब्रिड मॉडल इस्तेमाल करते हैं जिसमें ई-कॉमर्स और डायरेक्ट
-            सेलिंग दोनों शामिल हैं, ताकि हर सदस्य अपनी क्षमता के अनुसार बढ़ सके।
+            We follow a hybrid model that combines both e-commerce and direct
+            selling, allowing every member to grow according to their own
+            potential and goals.
           </p>
+
           <ul className="space-y-2 text-sm text-slate-700">
             <li>• Practical business training</li>
             <li>• Simple plans for new members</li>
@@ -52,12 +55,13 @@ const MissionVisionSection = () => {
             A trusted name in every Indian household.
           </h3>
           <p className="text-sm text-slate-700 mb-3">
-            हमारा विज़न है कि हम व्यक्तिगत देखभाल, स्वास्थ्य और वेलनेस के क्षेत्र
-            में ऐसे प्रोडक्ट्स दें जो बदलती ज़रूरतों के साथ तालमेल बिठाएँ।
+            Our vision is to provide personal care, health, and wellness
+            products that evolve with changing needs and lifestyles.
           </p>
+
           <p className="text-sm text-slate-700 mb-4">
-            डिजिटल ट्रांसफ़ॉर्मेशन की ताकत का उपयोग करते हुए, हम अपने पार्टनर्स और
-            ग्राहकों दोनों के लिए समृद्ध भविष्य बनाना चाहते हैं।
+            By leveraging the power of digital transformation, we aim to create
+            a prosperous future for both our partners and customers.
           </p>
           <ul className="space-y-2 text-sm text-slate-700">
             <li>• Digital-first business expansion</li>
