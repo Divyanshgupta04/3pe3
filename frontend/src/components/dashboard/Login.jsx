@@ -7,7 +7,7 @@ export default function OfficialLoginPage({
   onGoToRegister,
   onGoHome,
 }) {
-  const [email, setEmail] = useState(""); // 🔹 missing state add kiya
+  const [username, setUsername] = useState(""); // 🔹 changed to username
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
@@ -31,7 +31,7 @@ export default function OfficialLoginPage({
     if (!validate()) return;
     setLoading(true);
     try {
-      if (onSubmit) await onSubmit({ email, password, remember });
+      if (onSubmit) await onSubmit({ username, password, remember });
       else await new Promise((r) => setTimeout(r, 900)); // mock delay
       alert("Signed in successfully (mock).");
     } catch (err) {
@@ -90,7 +90,7 @@ export default function OfficialLoginPage({
           <div className="mt-5 grid gap-3">
             <div className="flex items-center gap-3 text-[11px] text-slate-500">
               <span className="h-px flex-1 bg-slate-700" />
-              <span>Or sign in with email</span>
+              <span>Or sign in with username</span>
               <span className="h-px flex-1 bg-slate-700" />
             </div>
 
@@ -114,21 +114,21 @@ export default function OfficialLoginPage({
                 </div>
                 <div className="relative">
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     className={`w-full rounded-lg border bg-slate-900/70 px-3.5 py-2.5 pr-10 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-400 transition ${
-                      errors.email ? "border-red-400/70" : "border-slate-700"
+                      errors.username ? "border-red-400/70" : "border-slate-700"
                     }`}
                     placeholder="User Name"
-                    aria-invalid={!!errors.email}
-                    aria-describedby={errors.email ? "email-error" : undefined}
+                    aria-invalid={!!errors.username}
+                    aria-describedby={errors.username ? "username-error" : undefined}
                   />
                   <FiMail className="w-4 h-4 absolute right-3.5 top-3 text-slate-500" />
                 </div>
-                {errors.email && (
-                  <p id="email-error" className="text-[11px] text-red-400 mt-1">
-                    {errors.email}
+                {errors.username && (
+                  <p id="username-error" className="text-[11px] text-red-400 mt-1">
+                    {errors.username}
                   </p>
                 )}
               </label>

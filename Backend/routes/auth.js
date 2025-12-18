@@ -194,23 +194,47 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
+    console.log('Login request body:', req.body);
+    const { email, username, password } = req.body;
+    const loginIdentifier = username || email;
+
+    if (!loginIdentifier || !password) {
+      console.log('Login failed: Missing credentials');
+      return res.status(400).json({ message: 'Username and password are required' });
     }
 
     const users = loadUsers();
-    const normalizedEmail = String(email).trim().toLowerCase();
-    const user = users.find((u) => String(u.email || '').trim().toLowerCase() === normalizedEmail);
+    const normalizedIdentifier = String(loginIdentifier).trim().toLowerCase();
+    console.log('Login identifier:', normalizedIdentifier);
+    
+    const user = users.find((u) => {
+      const uEmail = String(u.email || '').trim().toLowerCase();
+      const uInviteCode = String(u.inviteCode || '').trim().toLowerCase();
+      const uName = String(u.name || '').trim().toLowerCase();
+      
+      return uEmail === normalizedIdentifier || uInviteCode === normalizedIdentifier || uName === normalizedIdentifier;
+    });
+
     if (!user) {
+      console.log('Login failed: User not found');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const match = await bcrypt.compare(password, user.password);
+    // Handle plain text passwords for legacy users
+    let match = false;
+    if (user.password.startsWith('$2b$') || user.password.startsWith('$2a$')) {
+        match = await bcrypt.compare(password, user.password);
+    } else {
+        // Fallback for plain text passwords (if any exist in users.json)
+        match = (password === user.password);
+    }
+
     if (!match) {
+      console.log('Login failed: Password mismatch for user', user.id);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    console.log('Login success for user:', user.id);
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
     const { password: _pw, ...userWithoutSensitive } = user;
 
