@@ -17,7 +17,7 @@ import TestimonialsSection from "./components/TestimonialsSection";
 import FAQSection from "./components/FAQSection";
 import FooterSection from "./components/FooterSection";
 
-import MemberLayout from "./components/dashboard/MemberDashboard";
+import MemberLayout from "./components/dashboard/MemberLayout";
 import OfficialLoginPage from "./components/dashboard/Login";
 import OfficialRegisterPage from "./components/dashboard/Register";
 import WelcomePage from "./components/dashboard/WelcomePage";
@@ -39,9 +39,8 @@ export default function App() {
   const [activeSection, setActiveSection] = useState("home");
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // authView controls full-screen auth/dashboard flow
   const [authView, setAuthView] = useState(null);
-  // null | "login" | "register" | "welcome" | "welcomeLetter" | "idCard" | "dashboard"
+  // null | login | register | welcome | welcomeLetter | idCard | dashboard
 
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem("token")
@@ -49,7 +48,6 @@ export default function App() {
 
   const [welcomeData, setWelcomeData] = useState(null);
 
-  /* ---------------- LOGOUT ---------------- */
   function handleLogout() {
     localStorage.removeItem("token");
     setIsAuthenticated(false);
@@ -57,17 +55,15 @@ export default function App() {
     setWelcomeData(null);
   }
 
-  /* ---------------- REGISTER ---------------- */
   async function handleRegisterSubmit(payload) {
     const res = await fetch(`${config.apiUrl}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+
     const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || "Registration failed");
-    }
+    if (!res.ok) throw new Error(data.message || "Register failed");
 
     localStorage.setItem("token", data.token);
     setIsAuthenticated(true);
@@ -75,92 +71,38 @@ export default function App() {
     setWelcomeData({
       name: data.user?.name || payload.name,
       email: data.user?.email || payload.email,
-      password: payload.password, // only for welcome screen
+      password: payload.password,
       inviteCode: data.user?.inviteCode,
     });
 
     setAuthView("welcome");
   }
 
-  /* ---------------- LOGIN ---------------- */
   async function handleLoginSubmit(payload) {
     const res = await fetch(`${config.apiUrl}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: payload.email,
-        password: payload.password,
-      }),
+      body: JSON.stringify(payload),
     });
+
     const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || "Login failed");
-    }
+    if (!res.ok) throw new Error(data.message || "Login failed");
 
     localStorage.setItem("token", data.token);
     setIsAuthenticated(true);
-
-    // Login ke baad direct dashboard
     setAuthView("dashboard");
   }
 
-  /* ---------------- SMOOTH SCROLL + ANIM ---------------- */
   useEffect(() => {
-    const lenis = new Lenis({
-      lerp: 0.08,
-      wheelMultiplier: 1.2,
-      smoothWheel: true,
-    });
-
+    const lenis = new Lenis();
     function raf(time) {
       lenis.raf(time);
       requestAnimationFrame(raf);
     }
     requestAnimationFrame(raf);
 
-    gsap.from(".hero-heading", {
-      y: 40,
-      opacity: 0,
-      duration: 1,
-      ease: "power3.out",
-    });
-    gsap.from(".hero-sub", {
-      y: 20,
-      opacity: 0,
-      duration: 0.9,
-      delay: 0.3,
-      ease: "power3.out",
-    });
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.target.id) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-
-    NAV_ITEMS.forEach((item) => {
-      const el = document.getElementById(item.id);
-      if (el) observer.observe(el);
-    });
-
-    return () => {
-      lenis.destroy();
-      observer.disconnect();
-    };
+    gsap.from(".hero-heading", { y: 40, opacity: 0, duration: 1 });
   }, []);
-
-  const scrollToId = (id) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-    setMobileOpen(false);
-  };
-
-  /* ================= FULL SCREEN VIEWS ================= */
 
   if (authView === "login") {
     return (
@@ -221,28 +163,24 @@ export default function App() {
     );
   }
 
-  /* ---------------- DASHBOARD ---------------- */
   if (authView === "dashboard" && isAuthenticated) {
     return <MemberLayout onLogout={handleLogout} />;
   }
 
-  /* ================= LANDING WEBSITE ================= */
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+    <div className="min-h-screen bg-slate-50">
       <Header
         activeSection={activeSection}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
-        scrollToId={scrollToId}
         NAV_ITEMS={NAV_ITEMS}
-        isAuthenticated={isAuthenticated}
         onLoginClick={() => setAuthView("login")}
         onRegisterClick={() => setAuthView("register")}
         onLogoutClick={handleLogout}
+        isAuthenticated={isAuthenticated}
       />
 
-      <HeroSection scrollToId={scrollToId} />
+      <HeroSection />
       <AboutSection />
       <MissionVisionSection />
       <ServicesSection />
@@ -251,12 +189,7 @@ export default function App() {
       <TeamSection />
       <TestimonialsSection />
       <FAQSection />
-      <FooterSection
-        isAuthenticated={isAuthenticated}
-        onLoginClick={() => setAuthView("login")}
-        onRegisterClick={() => setAuthView("register")}
-        onLogoutClick={handleLogout}
-      />
+      <FooterSection />
     </div>
   );
 }
