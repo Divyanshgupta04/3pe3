@@ -4,15 +4,17 @@ const path = require('path');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
+
 const USERS_PATH = path.join(__dirname, '..', 'data', 'users.json');
 const EPINS_PATH = path.join(__dirname, '..', 'data', 'epins.json');
 
+/* -------------------- FILE HELPERS -------------------- */
+
 function loadUsers() {
   if (!fs.existsSync(USERS_PATH)) return [];
-  const raw = fs.readFileSync(USERS_PATH, 'utf-8');
   try {
-    return JSON.parse(raw || '[]');
-  } catch (e) {
+    return JSON.parse(fs.readFileSync(USERS_PATH, 'utf-8') || '[]');
+  } catch {
     return [];
   }
 }
@@ -23,10 +25,9 @@ function saveUsers(users) {
 
 function loadEpins() {
   if (!fs.existsSync(EPINS_PATH)) return [];
-  const raw = fs.readFileSync(EPINS_PATH, 'utf-8');
   try {
-    return JSON.parse(raw || '[]');
-  } catch (e) {
+    return JSON.parse(fs.readFileSync(EPINS_PATH, 'utf-8') || '[]');
+  } catch {
     return [];
   }
 }
@@ -43,48 +44,63 @@ function ensureActivationFlag(users) {
       changed = true;
     }
   });
-  if (changed) {
-    saveUsers(users);
-  }
+  if (changed) saveUsers(users);
 }
+
+/* -------------------- DAILY BONUS (FINAL) -------------------- */
 
 function applyDailyBonus(user) {
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  // Bonus sirf activated users ke liye
+  if (!user.isActivated || !user.activatedAt) return;
 
-  if (!user.lastDailyCredit) {
-    user.lastDailyCredit = today;
-    if (user.balance == null) user.balance = 0;
-    return;
-  }
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
 
-  const last = new Date(user.lastDailyCredit);
-  const now = new Date();
-  const diffDays = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+  const activationDate = new Date(user.activatedAt);
+  const daysSinceActivation = Math.floor(
+    (today - activationDate) / (1000 * 60 * 60 * 24)
+  );
 
-  if (diffDays > 0) {
-    const bonus = 50 * diffDays;
-    user.balance = (user.balance || 0) + bonus;
-    user.dailyBonusIncome = (user.dailyBonusIncome || 0) + bonus;
-    user.totalIncome = (user.totalIncome || 0) + bonus;
-    user.lastDailyCredit = today;
-  }
+  const MAX_DAYS = 30;
+
+  // 30 din ke baad bonus band
+  if (daysSinceActivation >= MAX_DAYS) return;
+
+  // Same day dobara credit nahi
+  if (user.lastDailyCredit === todayStr) return;
+
+  const DAILY_BONUS = 50;
+
+  user.balance = (user.balance || 0) + DAILY_BONUS;
+  user.dailyBonusIncome = (user.dailyBonusIncome || 0) + DAILY_BONUS;
+  user.totalIncome = (user.totalIncome || 0) + DAILY_BONUS;
+
+  user.lastDailyCredit = todayStr;
 }
+
+/* -------------------- ROUTES -------------------- */
 
 router.get('/', auth, (req, res) => {
   const users = loadUsers();
   ensureActivationFlag(users);
+
   const idx = users.findIndex((u) => u.id === req.user.id);
-  if (idx === -1) return res.status(404).json({ message: 'User not found' });
+  if (idx === -1) {
+    return res.status(404).json({ message: 'User not found' });
+  }
 
   const user = users[idx];
+
+  // Apply daily bonus
   applyDailyBonus(user);
+
   users[idx] = user;
   saveUsers(users);
 
-  const { password, ...userWithoutSensitive } = user;
+  const { password, ...safeUser } = user;
 
   res.json({
-    user: userWithoutSensitive,
+    user: safeUser,
     cards: {
       totalIncome: user.totalIncome || 0,
       withdrawal: user.withdrawal || 0,
@@ -96,7 +112,8 @@ router.get('/', auth, (req, res) => {
   });
 });
 
-// Activate ID using member's E-Pin from dashboard "Activate ID" section
+/* -------------------- ACTIVATE ID -------------------- */
+
 router.post('/activate-id', auth, (req, res) => {
   const { epin, packageId } = req.body || {};
 
@@ -108,7 +125,9 @@ router.post('/activate-id', auth, (req, res) => {
   ensureActivationFlag(users);
 
   const idx = users.findIndex((u) => u.id === req.user.id);
-  if (idx === -1) return res.status(404).json({ message: 'User not found' });
+  if (idx === -1) {
+    return res.status(404).json({ message: 'User not found' });
+  }
 
   const user = users[idx];
 
@@ -116,13 +135,16 @@ router.post('/activate-id', auth, (req, res) => {
     return res.status(400).json({ message: 'This ID is already activated.' });
   }
 
-  // Check E-Pin store
-  // Rule: pin must be unused AND either in admin pool (ownerUserId null/undefined) OR owned by this member.
-  const epins = loadEpins().map((e) => ({ ownerUserId: e.ownerUserId ?? null, ...e }));
+  const epins = loadEpins().map((e) => ({
+    ownerUserId: e.ownerUserId ?? null,
+    ...e,
+  }));
+
   const epinIndex = epins.findIndex((p) => {
     const match = String(p.code).trim() === String(epin).trim();
     const unused = !p.used;
-    const allowedOwner = p.ownerUserId === null || p.ownerUserId === user.id;
+    const allowedOwner =
+      p.ownerUserId === null || p.ownerUserId === user.id;
     return match && unused && allowedOwner;
   });
 
@@ -132,7 +154,6 @@ router.post('/activate-id', auth, (req, res) => {
 
   const epinObj = epins[epinIndex];
 
-  // Mark E-Pin as used and link to this user
   epinObj.used = true;
   epinObj.usedByUserId = user.id;
   epinObj.usedAt = new Date().toISOString();
@@ -141,18 +162,19 @@ router.post('/activate-id', auth, (req, res) => {
   epins[epinIndex] = epinObj;
   saveEpins(epins);
 
-  // Mark user as activated
   user.isActivated = true;
   user.activationPackage = packageId;
   user.activatedAt = new Date().toISOString();
+  user.lastDailyCredit = null; // start fresh
 
   users[idx] = user;
   saveUsers(users);
 
-  const { password, ...userWithoutSensitive } = user;
-  return res.json({
+  const { password, ...safeUser } = user;
+
+  res.json({
     message: 'ID activated successfully.',
-    user: userWithoutSensitive,
+    user: safeUser,
   });
 });
 

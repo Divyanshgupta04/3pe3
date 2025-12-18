@@ -8,14 +8,6 @@ import config from "../config/config";
 const API_BASE = config.apiUrl;
 
 const fallbackTeam = [
-  { id: "TEAM-fallback-1", name: "Mr. Raju Yadav", role: "Post-Basic | From Bihar", imageUrl: "" },
-  { id: "TEAM-fallback-2", name: "Mr. Sushil Yadav", role: "Post-Basic | From U.P.", imageUrl: "" },
-  { id: "TEAM-fallback-3", name: "Mr. Shiv Kumar", role: "Post-Basic | From Bihar, Rajgir", imageUrl: "" },
-  { id: "TEAM-fallback-4", name: "Mr. Amresh Kumar Pal", role: "Post-Basic | From Mirzapur", imageUrl: "" },
-  { id: "TEAM-fallback-5", name: "Mr. Raj Bijendra Yadav (Biltu)", role: "Post-Basic | From Bihar", imageUrl: "" },
-  { id: "TEAM-fallback-6", name: "Mr. Gopal Sharan", role: "Post-Basic | From Bihar", imageUrl: "" },
-  { id: "TEAM-fallback-7", name: "Mr. Saroj Kumar", role: "Post-Basic | From Bihar", imageUrl: "" },
-  { id: "TEAM-fallback-8", name: "Mr. Rajkishor Prasad", role: "Post-Basic | From Bihar", imageUrl: "" },
 ];
 
 const TeamSection = () => {

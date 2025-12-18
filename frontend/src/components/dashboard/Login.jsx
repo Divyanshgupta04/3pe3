@@ -2,8 +2,12 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FiEye, FiEyeOff, FiMail, FiLock } from "react-icons/fi";
 
-export default function OfficialLoginPage({ onSubmit, onGoToRegister, onGoHome }) {
-  const [email, setEmail] = useState("");      // 🔹 missing state add kiya
+export default function OfficialLoginPage({
+  onSubmit,
+  onGoToRegister,
+  onGoHome,
+}) {
+  const [email, setEmail] = useState(""); // 🔹 missing state add kiya
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
@@ -12,9 +16,7 @@ export default function OfficialLoginPage({ onSubmit, onGoToRegister, onGoHome }
 
   function validate() {
     const e = {};
-    if (!email) e.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      e.email = "Enter a valid email.";
+  
 
     if (!password) e.password = "Password is required.";
     else if (password.length < 6)
@@ -75,7 +77,7 @@ export default function OfficialLoginPage({ onSubmit, onGoToRegister, onGoHome }
             </div>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">
-                Welcome back 👋
+                Welcome back 
               </h1>
               <p className="text-xs text-slate-400 mt-1">
                 Sign in to continue to your{" "}
@@ -86,37 +88,6 @@ export default function OfficialLoginPage({ onSubmit, onGoToRegister, onGoHome }
 
           {/* Google button */}
           <div className="mt-5 grid gap-3">
-            <button
-              type="button"
-              onClick={() => alert("OAuth mock: Google sign-in")}
-              className="flex items-center justify-center gap-3 rounded-lg px-4 py-2.5 border border-slate-700 bg-slate-900/70 hover:bg-slate-800/80 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-sm transition"
-            >
-              <svg
-                className="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden
-              >
-                <path
-                  d="M21.35 11.1h-9.2v2.8h5.26c-.23 1.23-.93 2.27-1.98 2.96v2.46h3.2c1.88-1.73 2.97-4.28 2.97-7.22 0-.44-.04-.86-.05-1.3z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12.15 21c2.7 0 4.97-.9 6.63-2.44l-3.2-2.46c-.92.62-2.08.98-3.43.98-2.63 0-4.86-1.77-5.66-4.16H3.15v2.6C4.78 18.86 8.17 21 12.15 21z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M6.49 12.87A5.82 5.82 0 016.49 7.1V4.5H3.15A9.99 9.99 0 002.15 12c0 1.6.36 3.12 1 4.5l2.34-3.63z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12.15 4.5c1.47 0 2.8.5 3.84 1.48l2.88-2.88C16.98 1.58 14.7.72 12.15.72 8.17.72 4.78 2.86 3.15 5.5l2.34 2.6c.8-2.39 3.03-4.16 5.66-4.16z"
-                  fill="#EA4335"
-                />
-              </svg>
-              <span>Sign in with Google</span>
-            </button>
-
             <div className="flex items-center gap-3 text-[11px] text-slate-500">
               <span className="h-px flex-1 bg-slate-700" />
               <span>Or sign in with email</span>
@@ -135,10 +106,10 @@ export default function OfficialLoginPage({ onSubmit, onGoToRegister, onGoHome }
               <label className="block">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-medium text-slate-200">
-                    Email
+                    User Name
                   </span>
                   <span className="text-[10px] text-slate-500">
-                    Use registered email
+                    User Name
                   </span>
                 </div>
                 <div className="relative">
@@ -149,17 +120,14 @@ export default function OfficialLoginPage({ onSubmit, onGoToRegister, onGoHome }
                     className={`w-full rounded-lg border bg-slate-900/70 px-3.5 py-2.5 pr-10 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-400 transition ${
                       errors.email ? "border-red-400/70" : "border-slate-700"
                     }`}
-                    placeholder="you@example.com"
+                    placeholder="User Name"
                     aria-invalid={!!errors.email}
                     aria-describedby={errors.email ? "email-error" : undefined}
                   />
                   <FiMail className="w-4 h-4 absolute right-3.5 top-3 text-slate-500" />
                 </div>
                 {errors.email && (
-                  <p
-                    id="email-error"
-                    className="text-[11px] text-red-400 mt-1"
-                  >
+                  <p id="email-error" className="text-[11px] text-red-400 mt-1">
                     {errors.email}
                   </p>
                 )}
@@ -185,9 +153,7 @@ export default function OfficialLoginPage({ onSubmit, onGoToRegister, onGoHome }
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={`w-full rounded-lg border bg-slate-900/70 px-3.5 py-2.5 pr-10 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-400 transition ${
-                      errors.password
-                        ? "border-red-400/70"
-                        : "border-slate-700"
+                      errors.password ? "border-red-400/70" : "border-slate-700"
                     }`}
                     placeholder="Enter your password"
                     aria-invalid={!!errors.password}

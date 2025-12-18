@@ -5,9 +5,17 @@ import { fadeUp, sectionTitle } from "../config/motionConfig";
 
 const stats = [
   { labelTop: "50k+", labelBottom: "Trusted Customers", accent: "Global" },
-  { labelTop: "32k+", labelBottom: "Projects Completed", accent: "Across India" },
+  {
+    labelTop: "32k+",
+    labelBottom: "Projects Completed",
+    accent: "Across India",
+  },
   { labelTop: "21+", labelBottom: "Years Experience", accent: "Industry-wide" },
-  { labelTop: "97+", labelBottom: "Team Members", accent: "Dedicated & Skilled" },
+  {
+    labelTop: "97+",
+    labelBottom: "Team Members",
+    accent: "Dedicated & Skilled",
+  },
 ];
 
 const AboutSection = () => (
@@ -16,7 +24,7 @@ const AboutSection = () => (
     className="py-16 md:py-20 border-b border-slate-200 bg-slate-50"
   >
     <div className="max-w-6xl mx-auto px-4">
-      {sectionTitle("About Us", "The Most Profitable Company in WSE")}
+      {sectionTitle("About Us", "The Most Profitable Company in LSA")}
       <div className="grid md:grid-cols-[1.4fr_1fr] gap-10 items-start">
         <motion.div
           initial="hidden"
@@ -27,19 +35,25 @@ const AboutSection = () => (
           className="space-y-5 text-sm md:text-[15px] text-slate-700"
         >
           <p>
-            WORLD SHOPEE ENTERPRISES का विज़न है कि हर भारतीय परिवार में हमारा
-            ब्रांड एक जाना-पहचाना नाम बने। हम व्यक्तिगत देखभाल, स्वास्थ्य और
-            वेलनेस जैसे क्षेत्रों में विविध उत्पाद उपलब्ध कराते हैं।
+            <strong>Life Spark Associates</strong> envisions becoming a trusted
+            and well-recognized brand in every Indian household. We offer a wide
+            range of products across personal care, health, and wellness,
+            designed to improve everyday life and promote long-term well-being.
           </p>
+
           <p>
-            हमारा मिशन लोगों को डिजिटल दुनिया के बारे में शिक्षित करना और
-            उन्हें मजबूत व्यापारिक अवसरों से जोड़ना है, ताकि वे अपने सपनों
-            को अपना सकें और अपने परिवारों को आर्थिक रूप से मज़बूत बना सकें।
+            Our <strong>mission</strong> is to educate people about the digital
+            world and connect them with strong, sustainable business
+            opportunities. Through this, we empower individuals to pursue their
+            dreams with confidence and build a financially secure future for
+            themselves and their families.
           </p>
+
           <p>
-            “वेल्थ थ्रू हेल्थ” के सिद्धांत पर चलते हुए, हम अपने समुदाय के
-            सदस्यों के जीवन को समृद्ध बनाने पर ध्यान देते हैं — अच्छा स्वास्थ्य,
-            बेहतर आय और सही मार्गदर्शन के साथ।
+            Guided by the principle of <strong>“Wealth Through Health,”</strong>{" "}
+            we focus on enriching the lives of our community members by
+            promoting good health, creating better income opportunities, and
+            providing the right guidance for personal and professional growth.
           </p>
           <div className="flex flex-wrap gap-3 pt-3 text-xs">
             <span className="px-3 py-1.5 rounded-full bg-white border border-emerald-100 text-emerald-700">

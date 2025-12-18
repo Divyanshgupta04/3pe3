@@ -1,7 +1,13 @@
 // src/components/FooterSection.jsx
 import React from "react";
+import { FaTelegramPlane, FaWhatsapp } from "react-icons/fa";
 
-const FooterSection = ({ isAuthenticated, onLoginClick, onRegisterClick, onLogoutClick }) => {
+const FooterSection = ({
+  isAuthenticated,
+  onLoginClick,
+  onRegisterClick,
+  onLogoutClick,
+}) => {
   return (
     <footer
       id="footer"
@@ -15,11 +21,12 @@ const FooterSection = ({ isAuthenticated, onLoginClick, onRegisterClick, onLogou
               Newsletter
             </p>
             <h3 className="text-xl md:text-2xl font-semibold text-slate-900 mb-3">
-              Stay updated with WSE news & opportunities.
+              Stay updated with LSA news & opportunities.
             </h3>
             <p className="text-xs md:text-sm text-slate-700">
-              न्यूज़लेटर का उद्देश्य है कि महत्वपूर्ण अपडेट, ऑफर्स और एजुकेशनल
-              कंटेंट सीधे आपके इनबॉक्स तक पहुँचे, ताकि आप हमेशा एक कदम आगे रहें।
+              The purpose of our newsletter is to deliver important updates,
+              exclusive offers, and educational content directly to your inbox,
+              helping you stay informed and always one step ahead.
             </p>
           </div>
           <div className="space-y-3">
@@ -34,42 +41,55 @@ const FooterSection = ({ isAuthenticated, onLoginClick, onRegisterClick, onLogou
           </div>
         </div>
 
-        {/* Footer bottom */}
+        {/* Footer content */}
         <div className="grid md:grid-cols-4 gap-8 text-xs text-slate-700 mb-8">
+          {/* Brand + Social */}
           <div>
             <h4 className="text-sm font-semibold text-slate-900 mb-3">
-              World Shopee Enterprises
+              Life Spark Associates
             </h4>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-slate-600 mb-3">
               A hybrid platform combining e-commerce and direct selling to
               enrich lives across India.
             </p>
+
+            {/* Social Icons */}
+            <div className="flex items-center gap-3 mt-2">
+              <a
+                href="https://t.me/+zkZb7h9Gcbw4NDg9"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-full border border-slate-300 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition"
+                aria-label="Telegram"
+              >
+                <FaTelegramPlane size={20} />
+              </a>
+
+              <a
+                href="https://chat.whatsapp.com/Ly40UBqqkhA8j6vsOL7vqg?mode=hqrt2"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-full border border-slate-300 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition"
+                aria-label="WhatsApp"
+              >
+                <FaWhatsapp size={20} />
+              </a>
+            </div>
           </div>
 
-          <div>
-            <h4 className="text-sm font-semibold text-slate-900 mb-3">
-              Explore
-            </h4>
-            <ul className="space-y-1 text-slate-600">
-              <li>Home</li>
-              <li>Services</li>
-              <li>About Us</li>
-              <li>Latest Projects</li>
-              <li>Testimonials</li>
-              <li>Our Team</li>
-              <li>Contact Us</li>
-            </ul>
-          </div>
-
+          {/* Contact */}
           <div>
             <h4 className="text-sm font-semibold text-slate-900 mb-3">
               Contact Info
             </h4>
-            <p>Varanasi, Uttar Pradesh</p>
-            <p className="mt-1">worldshopeeenterprises@gmail.com</p>
-            <p>+91 73070 17024</p>
+            <p>
+              5th floor, 2/A, M.P. Marg, Opera House, Charni Road (East),
+              Mumbai 400005
+            </p>
+            <p className="mt-1">lifesparkassociate@gmail.com</p>
           </div>
 
+          {/* Popular Posts */}
           <div>
             <h4 className="text-sm font-semibold text-slate-900 mb-3">
               Popular Post
@@ -85,13 +105,13 @@ const FooterSection = ({ isAuthenticated, onLoginClick, onRegisterClick, onLogou
           </div>
         </div>
 
+        {/* Bottom bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-2 border-t border-slate-200 pt-3 text-[11px] text-slate-500">
           <p>
-            © {new Date().getFullYear()} World Shopee Enterprises. All rights
+            © {new Date().getFullYear()} Life Spark Associates. All rights
             reserved.
           </p>
 
-          {/* Bottom menu buttons */}
           <div className="flex items-center gap-3 mt-2 md:mt-0">
             {isAuthenticated ? (
               <button

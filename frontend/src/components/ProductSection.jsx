@@ -19,19 +19,23 @@ const ProductSection = () => {
         >
           {sectionTitle("Our Product", "What Does Choosing a Product Do?")}
           <p className="text-sm text-slate-700 mb-3">
-            आज हर व्यक्ति दिन में कई घंटे मोबाइल, लैपटॉप और अन्य गैजेट्स पर बिताता
-            है। ऐसे में इलेक्ट्रॉनिक डिवाइसेस से निकलने वाली रेडिएशन को हल्के में
-            नहीं लिया जा सकता।
+            In today’s digital age, people spend a significant part of their day
+            using mobile phones, laptops, and other electronic devices. In such
+            a lifestyle, the radiation emitted from these devices should not be
+            taken lightly.
           </p>
+
           <p className="text-sm text-slate-700 mb-4">
-            यदि आपका पहला प्रोडक्ट एंटी-रेडिएशन चिप है, तो आपको लोगों को इस तरह
-            समझाना चाहिए कि यह उनके और उनके परिवार के लिए कैसे फायदेमंद हो सकता
-            है — जैसे कि{" "}
+            If your first product is an{" "}
+            <span className="font-semibold">anti-radiation chip</span>, it is
+            important to explain to people how it can be beneficial for them and
+            their families — such as helping to{" "}
             <span className="font-semibold">
-              मोबाइल, वाई-फाई और गैजेट्स से निकलने वाली हानिकारक रेडिएशन को
-              कम करना।
+              reduce harmful radiation emitted from mobile phones, Wi-Fi
+              routers, and other electronic gadgets.
             </span>
           </p>
+
           <button className="px-5 py-2.5 text-xs rounded-full border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition bg-white">
             Read More
           </button>

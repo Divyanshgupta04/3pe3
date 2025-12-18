@@ -16,6 +16,7 @@ import TeamSection from "./components/TeamSection";
 import TestimonialsSection from "./components/TestimonialsSection";
 import FAQSection from "./components/FAQSection";
 import FooterSection from "./components/FooterSection";
+
 import MemberLayout from "./components/dashboard/MemberDashboard";
 import OfficialLoginPage from "./components/dashboard/Login";
 import OfficialRegisterPage from "./components/dashboard/Register";
@@ -24,7 +25,7 @@ import WelcomeLetter from "./components/dashboard/WelcomeLetter";
 import CreateIdCard from "./components/dashboard/CreateIdCard";
 
 const NAV_ITEMS = [
-  { label: "Home", id: "home" } ,
+  { label: "Home", id: "home" },
   { label: "About", id: "about" },
   { label: "Service", id: "services" },
   { label: "Project", id: "projects" },
@@ -37,18 +38,26 @@ const NAV_ITEMS = [
 export default function App() {
   const [activeSection, setActiveSection] = useState("home");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [authView, setAuthView] = useState(null); // "login" | "register" | "welcome" | "welcomeLetter" | "idCard"
+
+  // authView controls full-screen auth/dashboard flow
+  const [authView, setAuthView] = useState(null);
+  // null | "login" | "register" | "welcome" | "welcomeLetter" | "idCard" | "dashboard"
+
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem("token")
   );
+
   const [welcomeData, setWelcomeData] = useState(null);
 
+  /* ---------------- LOGOUT ---------------- */
   function handleLogout() {
     localStorage.removeItem("token");
     setIsAuthenticated(false);
     setAuthView(null);
+    setWelcomeData(null);
   }
 
+  /* ---------------- REGISTER ---------------- */
   async function handleRegisterSubmit(payload) {
     const res = await fetch(`${config.apiUrl}/auth/register`, {
       method: "POST",
@@ -60,42 +69,47 @@ export default function App() {
       throw new Error(data.message || "Registration failed");
     }
 
-    // Save member token
     localStorage.setItem("token", data.token);
     setIsAuthenticated(true);
 
-    // After register, go to WelcomePage with real invite code from backend
     setWelcomeData({
       name: data.user?.name || payload.name,
       email: data.user?.email || payload.email,
-      // we only know plain password from payload, not from backend
-      password: payload.password,
+      password: payload.password, // only for welcome screen
       inviteCode: data.user?.inviteCode,
     });
+
     setAuthView("welcome");
   }
 
+  /* ---------------- LOGIN ---------------- */
   async function handleLoginSubmit(payload) {
     const res = await fetch(`${config.apiUrl}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: payload.email, password: payload.password }),
+      body: JSON.stringify({
+        email: payload.email,
+        password: payload.password,
+      }),
     });
     const data = await res.json();
     if (!res.ok) {
       throw new Error(data.message || "Login failed");
     }
+
     localStorage.setItem("token", data.token);
     setIsAuthenticated(true);
-    setAuthView(null);
+
+    // Login ke baad direct dashboard
+    setAuthView("dashboard");
   }
 
+  /* ---------------- SMOOTH SCROLL + ANIM ---------------- */
   useEffect(() => {
     const lenis = new Lenis({
       lerp: 0.08,
       wheelMultiplier: 1.2,
       smoothWheel: true,
-      smoothTouch: false,
     });
 
     function raf(time) {
@@ -121,9 +135,8 @@ export default function App() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const id = entry.target.id;
-            if (id) setActiveSection(id);
+          if (entry.isIntersecting && entry.target.id) {
+            setActiveSection(entry.target.id);
           }
         });
       },
@@ -143,11 +156,12 @@ export default function App() {
 
   const scrollToId = (id) => {
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (el) el.scrollIntoView({ behavior: "smooth" });
     setMobileOpen(false);
   };
 
-  // When authView is set, show the corresponding page full-screen
+  /* ================= FULL SCREEN VIEWS ================= */
+
   if (authView === "login") {
     return (
       <OfficialLoginPage
@@ -175,9 +189,7 @@ export default function App() {
         email={welcomeData.email}
         password={welcomeData.password}
         inviteCode={welcomeData.inviteCode}
-        onContinue={() => {
-          setAuthView(null);
-        }}
+        onContinue={() => setAuthView("dashboard")}
         onViewWelcomeLetter={() => setAuthView("welcomeLetter")}
         onCreateIdCard={() => setAuthView("idCard")}
       />
@@ -192,7 +204,7 @@ export default function App() {
         inviteCode={welcomeData.inviteCode}
         onBack={() => setAuthView("welcome")}
         onCreateIdCard={() => setAuthView("idCard")}
-        onContinue={() => setAuthView(null)}
+        onContinue={() => setAuthView("dashboard")}
       />
     );
   }
@@ -203,11 +215,18 @@ export default function App() {
         userName={welcomeData.name}
         email={welcomeData.email}
         inviteCode={welcomeData.inviteCode}
-        onBack={() => setAuthView("welcomeLetter")}
-        onContinue={() => setAuthView(null)}
+        onBack={() => setAuthView("welcome")}
+        onContinue={() => setAuthView("dashboard")}
       />
     );
   }
+
+  /* ---------------- DASHBOARD ---------------- */
+  if (authView === "dashboard" && isAuthenticated) {
+    return <MemberLayout onLogout={handleLogout} />;
+  }
+
+  /* ================= LANDING WEBSITE ================= */
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
@@ -241,4 +260,3 @@ export default function App() {
     </div>
   );
 }
-
